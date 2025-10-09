@@ -1,0 +1,1 @@
+{"name":"Sketchy","short_name":"Sketchy","start_url":".","display":"standalone","background_color":"#2c2c30","theme_color":"#2c2c30","lang":"en","scope":"/","icons":[{"src":"./android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"./android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"launch_handler":{"client_mode":"navigate-existing"}}
