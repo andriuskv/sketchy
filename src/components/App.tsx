@@ -7,9 +7,6 @@ import BottomBar from "components/BottomBar/BottomBar";
 import Splash from "components/Splash/Splash";
 import Icon from "components/Icon/Icon";
 
-// TODO: SPA
-// TODO: maybe some pattern for splash
-
 function App() {
   const [images, setImages] = useState<Image[]>([]);
   const [session, setSession] = useState<Session | null>(null);
