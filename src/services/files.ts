@@ -160,45 +160,9 @@ function handleMessage(resolve: (blob: Blob) => void) {
       worker.terminate();
     }
     delete thumbs[data.name].worker;
-    // setTimeout(() => {
-    //   if (target) {
-    //     const worker = target as Worker;
-    //     worker.removeEventListener("message", handleMessage);
-    //     worker.terminate();
-    //   }
-    //   delete thumbs[data.name].worker;
-    // }, 10000);
     resolve(data.blob);
   };
 }
-
-// function resizeImageBlob(blob: Blob): Promise<Blob> {
-//   return new Promise(resolve => {
-//     const img = new Image();
-
-//     img.onload = () => {
-//       const canvas = document.createElement("canvas");
-//       const ctx = canvas.getContext("2d")!;
-//       const width = 384;
-
-//       if (img.width < width) {
-//         resolve(blob);
-//         URL.revokeObjectURL(img.src);
-//         return;
-//       }
-//       const height = img.height * (width / img.width);
-
-//       canvas.width = width;
-//       canvas.height = height;
-
-//       ctx.drawImage(img, 0, 0, width, height);
-
-//       canvas.toBlob(resolve as BlobCallback, "image/jpeg", 0.8);
-//       URL.revokeObjectURL(img.src);
-//     };
-//     img.src = URL.createObjectURL(blob);
-//   });
-// }
 
 window.addEventListener("drop", event => {
   event.preventDefault();

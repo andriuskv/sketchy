@@ -1,6 +1,5 @@
 type Image = {
   file: File,
-  // thumb: string,
   name: string,
   selected: boolean
 };
@@ -13,5 +12,3 @@ type Prefs = {
 };
 
 type Session = Prefs & { images: Image[] };
-
-// export type { Image, Prefs, Session };
