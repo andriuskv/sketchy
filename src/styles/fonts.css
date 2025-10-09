@@ -1,0 +1,15 @@
+@font-face {
+  font-display: block;
+  font-family: "Meow Script";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../assets/fonts/meow-script-v6-latin-regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-display: block;
+  font-family: "Nanum Pen Script";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../assets/fonts/nanum-pen-script-v25-latin-regular.woff2") format("woff2");
+}

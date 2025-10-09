@@ -1,0 +1,13 @@
+.theme-btns {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+}
+
+.theme-btn.active {
+  --background-color: light-dark(var(--color-black-4), var(--color-white-10));
+  --color: light-dark(var(--color-black-60), var(--color-white));
+}

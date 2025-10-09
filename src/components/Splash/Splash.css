@@ -1,0 +1,71 @@
+.splash {
+  display: flex;
+  flex-direction: column;
+  grid-row: 1 / 1;
+  grid-column: 1 / 1;
+  background-image: url("../../assets/wave.svg");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.splash-title-container {
+  margin: auto;
+}
+
+.splash-title {
+  font-size: 7rem;
+  text-align: center;
+  font-family: "Meow Script";
+  text-shadow: 1px 2px 2px var(--color-black-8), 2px 4px 4px var(--color-black-4), 4px 8px 8px var(--color-black-2);
+}
+
+.splash-subtitle {
+  margin: auto;
+  text-align: center;
+  font-family: "Nanum Pen Script";
+  font-size: var(--text-4xl);
+  color: light-dark(var(--color-black-60), var(--color-white-60));
+  text-shadow: 0 1px 1px var(--color-black-8), 1px 2px 2px var(--color-black-4), 2px 4px 4px var(--color-black-2);
+}
+
+.splash-description {
+  margin-top: var(--space-xl);
+  margin-inline: auto;
+  padding-inline: var(--space-xl);
+  font-size: var(--text-xl);
+  text-align: center;
+  color: light-dark(var(--color-black-60), var(--color-white-60));
+}
+
+.splash-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xl);
+  padding: var(--space-md);
+  margin-top: var(--space-xl);
+  margin-bottom: auto;
+}
+
+.splash-btn {
+  --background-color: light-dark(var(--color-black-4), var(--color-white-10));
+
+  flex-direction: column;
+  width: 128px;
+  height: 96px;
+  border-radius: 24px;
+  corner-shape: squircle;
+
+  &:has(:focus-visible) {
+    box-shadow: var(--focus-shadow);
+  }
+
+  &:disabled:is(:hover, :focus-visible) {
+    --background-color: light-dark(var(--color-black-4), var(--color-white-10));
+  }
+
+  .svg-icon {
+    width: 24px;
+    height: 24px;
+  }
+}

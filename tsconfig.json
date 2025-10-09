@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "outDir": "dist",
+    "sourceMap": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "target": "ESNext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "importsNotUsedAsValues": "remove",
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "resolvePackageJsonImports": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "paths": {
+      "@/*": ["*"],
+      "services/*": ["services/*"],
+      "components/*": ["components/*"],
+      "contexts/*": ["contexts/*"],
+      "hooks/*": ["hooks/*"],
+      "types/*": ["types/*"],
+      "assets/*": ["assets/*"],
+      "lang/*": ["lang/*"],
+      "utils": ["utils.ts"]
+    },
+    "types": ["vite/client"]
+  },
+  "lib": ["DOM", "ESNext", "webworker"],
+  "typeRoots": ["node_modules/@types", "src/types"],
+  "include": [
+    "src"
+  ],
+  "exclude": ["node_modules", "dist"]
+}
