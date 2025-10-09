@@ -2,7 +2,6 @@ import { type ChangeEvent } from "react";
 import FileUploadButton from "components/FileUploadButton/FileUploadButton";
 import FolderUploadButton from "components/FolderUploadButton/FolderUploadButton";
 import ThemeSelector from "components/ThemeSelector/ThemeSelector";
-import Icon from "components/Icon/Icon";
 import "./Splash.css";
 
 type Props = {
