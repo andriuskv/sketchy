@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent, type PointerEvent as ReactPointerEvent } from "react";
 import Icon from "components/Icon/Icon";
 import ImageList from "components/ImageList/ImageList";
 import "./EndSessionView.css";
@@ -13,26 +13,53 @@ type StateImage = {
   url: string
 }
 
+
 export default function EndSessionView({ images, close }: Props) {
   const [image, setImage] = useState<StateImage | null>(null);
+  const pointerPosStart = useRef({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
+  const initialScale = useRef(1);
 
   useEffect(() => {
-    function handleKeydown({ key }: KeyboardEvent) {
+    function handleKeydown(event: KeyboardEvent) {
+      const { key } = event;
+
       if (key === "ArrowLeft") {
         prevImage();
       }
-      if (key === "ArrowRight") {
+      else if (key === "ArrowRight") {
         nextImage();
+      }
+      else if (key === "=") {
+        zoomIn();
+      }
+      else if (key === "-") {
+        zoomOut();
       }
       else if (key === "Escape" ) {
         hideImage();
       }
     }
 
+    function handleWheel(event: WheelEvent) {
+      const { deltaY } = event;
+
+      if (deltaY > 0) {
+        zoomOut();
+
+      }
+      else if (deltaY < 0) {
+        zoomIn();
+      }
+    }
+
     window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("wheel", handleWheel);
+
 
     return () => {
       window.removeEventListener("keydown", handleKeydown);
+      window.removeEventListener("wheel", handleWheel);
     };
   }, [image]);
 
@@ -87,14 +114,128 @@ export default function EndSessionView({ images, close }: Props) {
     setImage(null);
   }
 
+  function resetImage() {
+    if (!image) {
+      return;
+    }
+    const target = document.querySelector(".end-session-expanded-image") as HTMLImageElement;
+    const container = document.querySelector(".end-session-expanded-image-container") as HTMLDivElement;
+
+    target.style.setProperty("--scale", initialScale.current.toString());
+    container.style.setProperty("--x", "50%");
+    container.style.setProperty("--y", "50%");
+  }
+
+  function zoomIn() {
+    if (!image) {
+      return;
+    }
+    const target = document.querySelector(".end-session-expanded-image") as HTMLImageElement;
+    const scale = parseFloat(target.style.getPropertyValue("--scale"));
+    let nextScale = scale + scale * 0.15;
+
+    if (nextScale > 16) {
+      nextScale = 16;
+    }
+    target.style.setProperty("--scale", (nextScale).toString());
+  }
+
+  function zoomOut() {
+    if (!image) {
+      return;
+    }
+    const target = document.querySelector(".end-session-expanded-image") as HTMLImageElement;
+    const scale = parseFloat(target.style.getPropertyValue("--scale"));
+    let nextScale = scale - scale * 0.15;
+
+    if (nextScale < 0.2) {
+      nextScale =  0.2;
+    }
+    target.style.setProperty("--scale", (nextScale).toString());
+  }
+
+  function handlePointerDown(event: ReactPointerEvent) {
+    const imageElement = imageRef.current;
+
+    if (!imageElement || !image || event.button !== 0) {
+      return;
+    }
+    const containerElement = imageElement.parentElement!;
+    const rect = containerElement.getBoundingClientRect();
+    const translateAmount = 0.5;
+    const x = event.clientX - rect.left - (rect.width * translateAmount);
+    const y = event.clientY - rect.top - (rect.height * translateAmount);
+
+    pointerPosStart.current.x = x;
+    pointerPosStart.current.y = y;
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+    document.documentElement.style.cursor = "grabbing";
+  }
+
+  function handlePointerMove(event: PointerEvent) {
+    if (!image) {
+      return;
+    }
+    const target = document.querySelector(".end-session-expanded-image-container") as HTMLImageElement;
+    const viewWidth = document.documentElement.clientWidth;
+    const viewHeight = document.documentElement.clientHeight;
+    const { clientX, clientY } = event;
+    const x = ((clientX - pointerPosStart.current.x) / viewWidth) * 100;
+    const y = ((clientY - pointerPosStart.current.y) / viewHeight) * 100;
+
+    target.style.setProperty("--x", `${x}%`);
+    target.style.setProperty("--y", `${y}%`);
+  }
+
+  function handlePointerUp() {
+    document.documentElement.style.cursor = "";
+    window.removeEventListener("pointermove", handlePointerMove);
+  }
+
+  function handeImageLoad(event: SyntheticEvent) {
+    const target = event.target as HTMLImageElement;
+    const { width, height } = target;
+    const viewWidth = document.documentElement.clientWidth;
+    const viewHeight = document.documentElement.clientHeight;
+    let scale = 1;
+
+    if (width > height) {
+      if (width >= viewWidth) {
+        scale = viewWidth / width;
+
+        if (scale * height >= viewHeight) {
+          scale = viewHeight / height;
+        }
+      }
+    }
+    else if (height >= viewHeight) {
+      scale = viewHeight / height;
+
+      if (scale * width >= viewWidth) {
+        scale = viewWidth / width;
+      }
+    }
+    initialScale.current = scale;
+    target.style.setProperty("--scale", scale.toString());
+  }
+
   return (
     <>
       {image ? (
-        <div className="images-view-mask">
-          <button className="btn icon-btn" onClick={hideImage}>
-            <Icon id="close"/>
-          </button>
-          <img src={image.url} className="end-session-expanded-image"/>
+        <div className="images-view-mask" onPointerDown={handlePointerDown}>
+          <div className="images-view-btns">
+            <button className="btn icon-btn" onClick={resetImage} title="Reset">
+              <Icon id="reset"/>
+            </button>
+            <button className="btn icon-btn" onClick={hideImage} title="Close">
+              <Icon id="close"/>
+            </button>
+          </div>
+          <div className="end-session-expanded-image-container">
+            <div id="dot"></div>
+            <img src={image.url} className="end-session-expanded-image" onLoad={handeImageLoad} draggable="false" ref={imageRef}/>
+          </div>
         </div>
       ) : null}
       <div className="end-session-image-view">
