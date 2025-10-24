@@ -4,7 +4,6 @@ import "./image-viewer.css";
 import EndSessionView from "./EndSessionView/EndSessionView";
 import useWorker from "./useWorker";
 
-
 type Props = {
   session: Session,
   close: () => void
@@ -84,15 +83,13 @@ export default function ImageViewer({ session, close }: Props) {
           current: preloaded.current[session.images[state.index].name]
         });
       }
-      else {
-        if (document.startViewTransition) {
-          document.startViewTransition(() => {
-            setState({ ...state, grace: event.data.duration });
-          });
-        }
-        else {
+      else if (document.visibilityState === "visible" && document.startViewTransition) {
+        document.startViewTransition(() => {
           setState({ ...state, grace: event.data.duration });
-        }
+        });
+      }
+      else {
+        setState({ ...state, grace: event.data.duration });
       }
     }
     else if (event.data.id === "duration") {
