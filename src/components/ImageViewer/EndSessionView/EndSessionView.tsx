@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SyntheticEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent, type PointerEvent as ReactPointerEvent, useEffectEvent } from "react";
 import Icon from "components/Icon/Icon";
 import ImageList from "components/ImageList/ImageList";
 import "./EndSessionView.css";
@@ -13,55 +13,12 @@ type StateImage = {
   url: string
 }
 
-
 export default function EndSessionView({ images, close }: Props) {
   const [image, setImage] = useState<StateImage | null>(null);
   const pointerPosStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
   const initialScale = useRef(1);
-
-  useEffect(() => {
-    function handleKeydown(event: KeyboardEvent) {
-      const { key } = event;
-
-      if (key === "ArrowLeft") {
-        prevImage();
-      }
-      else if (key === "ArrowRight") {
-        nextImage();
-      }
-      else if (key === "=") {
-        zoomIn();
-      }
-      else if (key === "-") {
-        zoomOut();
-      }
-      else if (key === "Escape" ) {
-        hideImage();
-      }
-    }
-
-    function handleWheel(event: WheelEvent) {
-      const { deltaY } = event;
-
-      if (deltaY > 0) {
-        zoomOut();
-
-      }
-      else if (deltaY < 0) {
-        zoomIn();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeydown);
-    window.addEventListener("wheel", handleWheel);
-
-
-    return () => {
-      window.removeEventListener("keydown", handleKeydown);
-      window.removeEventListener("wheel", handleWheel);
-    };
-  }, [image]);
+  const root = useRef(document.documentElement);
 
   function nextImage() {
     if (!image) {
@@ -99,33 +56,6 @@ export default function EndSessionView({ images, close }: Props) {
     });
   }
 
-  function viewImage(index: number, file: File) {
-    setImage({
-      index,
-      url: URL.createObjectURL(file)
-    });
-  }
-
-  function hideImage() {
-    if (!image) {
-      return;
-    }
-    URL.revokeObjectURL(image.url);
-    setImage(null);
-  }
-
-  function resetImage() {
-    if (!image) {
-      return;
-    }
-    const target = document.querySelector(".end-session-expanded-image") as HTMLImageElement;
-    const container = document.querySelector(".end-session-expanded-image-container") as HTMLDivElement;
-
-    target.style.setProperty("--scale", initialScale.current.toString());
-    container.style.setProperty("--x", "50%");
-    container.style.setProperty("--y", "50%");
-  }
-
   function zoomIn() {
     if (!image) {
       return;
@@ -154,6 +84,94 @@ export default function EndSessionView({ images, close }: Props) {
     target.style.setProperty("--scale", (nextScale).toString());
   }
 
+  function hideImage() {
+    if (!image) {
+      return;
+    }
+    URL.revokeObjectURL(image.url);
+    setImage(null);
+  }
+
+  const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    const { key } = event;
+
+    if (key === "ArrowLeft") {
+      prevImage();
+    }
+    else if (key === "ArrowRight") {
+      nextImage();
+    }
+    else if (key === "=") {
+      zoomIn();
+    }
+    else if (key === "-") {
+      zoomOut();
+    }
+    else if (key === "Escape" ) {
+      hideImage();
+    }
+  });
+  const onWheel = useEffectEvent((event: WheelEvent) => {
+    const { deltaY } = event;
+
+    if (deltaY > 0) {
+      zoomOut();
+
+    }
+    else if (deltaY < 0) {
+      zoomIn();
+    }
+  });
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("wheel", onWheel);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("wheel", onWheel);
+    };
+  }, [image]);
+
+
+  function viewImage(index: number, file: File) {
+    setImage({
+      index,
+      url: URL.createObjectURL(file)
+    });
+  }
+
+  function resetImage() {
+    if (!image) {
+      return;
+    }
+    const target = document.querySelector(".end-session-expanded-image") as HTMLImageElement;
+    const container = document.querySelector(".end-session-expanded-image-container") as HTMLDivElement;
+
+    target.style.setProperty("--dir", "1");
+    target.style.setProperty("--scale", initialScale.current.toString());
+    container.style.setProperty("--x", "50%");
+    container.style.setProperty("--y", "50%");
+  }
+
+  function mirrorImage() {
+    if (!image) {
+      return;
+    }
+    const target = document.querySelector(".end-session-expanded-image") as HTMLImageElement;
+    const dir = parseInt(target.style.getPropertyValue("--dir"), 10);
+
+    target.style.setProperty("--dir", (dir === 1 ? -1 : 1).toString());
+  }
+
+  function showInOriginalSize() {
+    if (!image) {
+      return;
+    }
+    const target = document.querySelector(".end-session-expanded-image") as HTMLImageElement;
+    target.style.setProperty("--scale", "1");
+  }
+
   function handlePointerDown(event: ReactPointerEvent) {
     const imageElement = imageRef.current;
 
@@ -170,7 +188,7 @@ export default function EndSessionView({ images, close }: Props) {
     pointerPosStart.current.y = y;
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
-    document.documentElement.style.cursor = "grabbing";
+    root.current.style.cursor = "grabbing";
   }
 
   function handlePointerMove(event: PointerEvent) {
@@ -189,7 +207,7 @@ export default function EndSessionView({ images, close }: Props) {
   }
 
   function handlePointerUp() {
-    document.documentElement.style.cursor = "";
+    root.current.style.cursor = "";
     window.removeEventListener("pointermove", handlePointerMove);
   }
 
@@ -201,12 +219,10 @@ export default function EndSessionView({ images, close }: Props) {
     let scale = 1;
 
     if (width > height) {
-      if (width >= viewWidth) {
-        scale = viewWidth / width;
+      scale = viewWidth / width;
 
-        if (scale * height >= viewHeight) {
-          scale = viewHeight / height;
-        }
+      if (scale * height >= viewHeight) {
+        scale = viewHeight / height;
       }
     }
     else if (height >= viewHeight) {
@@ -216,15 +232,25 @@ export default function EndSessionView({ images, close }: Props) {
         scale = viewWidth / width;
       }
     }
+    else {
+      scale = viewHeight / height;
+    }
     initialScale.current = scale;
     target.style.setProperty("--scale", scale.toString());
+    target.style.setProperty("--dir", "1");
   }
 
   return (
     <>
       {image ? (
         <div className="images-view-mask" onPointerDown={handlePointerDown}>
-          <div className="images-view-btns">
+          <div className="images-view-top">
+            <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
+              <Icon id="image-full"/>
+            </button>
+            <button className="btn icon-btn" onClick={mirrorImage} title="Mirror horizontally">
+              <Icon id="flip-horizontal"/>
+            </button>
             <button className="btn icon-btn" onClick={resetImage} title="Reset">
               <Icon id="reset"/>
             </button>
@@ -233,8 +259,15 @@ export default function EndSessionView({ images, close }: Props) {
             </button>
           </div>
           <div className="end-session-expanded-image-container">
-            <div id="dot"></div>
             <img src={image.url} className="end-session-expanded-image" onLoad={handeImageLoad} draggable="false" ref={imageRef}/>
+          </div>
+          <div className="images-view-bottom">
+            <button className="btn icon-btn" onClick={prevImage} title="Previous">
+              <Icon id="chevron-left"/>
+            </button>
+            <button className="btn icon-btn" onClick={nextImage} title="Next">
+              <Icon id="chevron-right"/>
+            </button>
           </div>
         </div>
       ) : null}

@@ -17,7 +17,7 @@
   }
 }
 
-.images-view-btns {
+.images-view-top {
   position: absolute;
   top: var(--space-xl);
   right: var(--space-xl);
@@ -37,13 +37,14 @@
 }
 
 .end-session-expanded-image {
+  --dir: 1;
   --scale: 1;
   --origin-x: 50%;
   --origin-y: 50%;
 
   user-select: none;
   transform-origin: 50% 50%;
-  scale: var(--scale);
+  scale: calc(var(--dir) * var(--scale)) var(--scale);
   width: auto;
   max-width: none;
 }
@@ -57,4 +58,12 @@
 .session-close-btn {
   margin-top: var(--space-md);
   margin-bottom: var(--space-md);
+}
+
+.images-view-bottom {
+  position: absolute;
+  bottom: var(--space-xl);
+  right: var(--space-xl);
+  display: flex;
+  gap: var(--space-md);
 }
