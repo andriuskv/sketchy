@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { getThumb, generateThumb } from "services/files";
 import "./image-list.css";
+import ToTop from "./ToTop/ToTop";
 
 type ListProps = {
   images: {
@@ -78,6 +79,7 @@ export default function ImageList({ images, handleImageSelection, viewImage }: L
             handleImageSelection={handleImageSelection} viewImage={viewImage}/>
         ))}
       </ul>
+      {handleImageSelection ? <ToTop offset="200px"/> : <ToTop/> }
     </div>
   );
 }

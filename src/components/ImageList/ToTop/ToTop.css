@@ -1,0 +1,54 @@
+.to-top-button {
+  z-index: 1;
+  position: absolute;
+  right: 14px;
+  bottom: var(--space-md);
+  display: none;
+  height: auto;
+  padding: var(--space-md);
+  box-shadow: var(--highligh-shadow);
+  background-color: var(--color-grey-30);
+
+  &:hover {
+    background-color: var(--color-grey-20);
+  }
+
+  &:focus-visible {
+    box-shadow:
+      var(--focus-shadow),
+      var(--highligh-shadow);
+  }
+
+  &.visible {
+    display: block;
+    animation: show-button 0.2s both;
+  }
+
+  &.hiding {
+    animation: hide-button 0.2s both;
+  }
+}
+
+@keyframes show-button {
+  from {
+    opacity: 0;
+    transform: translateY(100%) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes hide-button {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(100%) scale(0.9);
+  }
+}
