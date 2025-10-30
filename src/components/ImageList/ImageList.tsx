@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { getThumb, generateThumb } from "services/files";
 import "./image-list.css";
@@ -14,7 +14,6 @@ type ListProps = {
 }
 
 type ItemProps = {
-  root?: HTMLDivElement | null,
   image: {
     name: string,
     file: File,
@@ -25,8 +24,8 @@ type ItemProps = {
   viewImage?: (index: number, file: File) => void
 }
 
-function Item({ root, image, index, handleImageSelection, viewImage }: ItemProps) {
-  const { inView, ref } = useInView({ root, rootMargin: "200px 0px 512px 0px" });
+function Item({ image, index, handleImageSelection, viewImage }: ItemProps) {
+  const { inView, ref } = useInView({ root: document.querySelector(".image-list-container"), rootMargin: "200px 0px 512px 0px" });
   const [thumb, setThumb] = useState(() => getThumb(image.name));
 
   useEffect(() => {
@@ -71,13 +70,11 @@ function Item({ root, image, index, handleImageSelection, viewImage }: ItemProps
 }
 
 export default function ImageList({ images, handleImageSelection, viewImage }: ListProps) {
-  const container = useRef<HTMLDivElement>(null);
-
   return (
-    <div className="image-list-container" ref={container}>
+    <div className="image-list-container">
       <ul className="container image-list">
         {images.map((image, index) => (
-          <Item root={container.current} image={image} index={index} key={image.name}
+          <Item image={image} index={index} key={image.name}
             handleImageSelection={handleImageSelection} viewImage={viewImage}/>
         ))}
       </ul>

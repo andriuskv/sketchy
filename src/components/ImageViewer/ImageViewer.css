@@ -1,0 +1,80 @@
+.viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  .icon-btn {
+    --color: var(--color-white-60);
+
+    &:hover, &:focus-visible {
+      --color: var(--color-white);
+      --background-color: var(--color-white-10);
+    }
+  }
+
+  &.overlay {
+    z-index: 1;
+    position: fixed;
+    inset: 0;
+    background-color: var(--color-black-60);
+  }
+}
+
+.viewer-bar {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-md);
+}
+
+.viewer-top-bar {
+  top: 0;
+}
+
+.viewer-bottom-bar {
+  bottom: 0;
+  padding-left: var(--space-xl);
+}
+
+.viewer-bar-item-info {
+  margin-right: var(--space-md);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  text-shadow:
+    0 1px 1px var(--color-black-100-16),
+    0 2px 2px var(--color-black-100-8);
+
+  &.text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.viewer-image-container {
+  --x: 50%;
+  --y: 50%;
+
+  z-index: -1;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  translate: -50% -50%;
+}
+
+.viewer-image {
+  --dir: 1;
+  --scale: 1;
+  --origin-x: 50%;
+  --origin-y: 50%;
+
+  user-select: none;
+  transform-origin: 50% 50%;
+  scale: calc(var(--dir) * var(--scale)) var(--scale);
+  width: auto;
+  max-width: none;
+}

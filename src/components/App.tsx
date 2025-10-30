@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { shuffleArray } from "@/utils";
 import * as filesService from "services/files";
-import ImageViewer from "components/ImageViewer/ImageViewer";
+import Session from "components/Session/Session";
 import ImageList from "components/ImageList/ImageList";
 import BottomBar from "components/BottomBar/BottomBar";
 import Splash from "components/Splash/Splash";
@@ -125,7 +125,7 @@ function App() {
   }
 
   if (session) {
-    return <ImageViewer session={session} close={closeSession}/>;
+    return <Session session={session} close={closeSession}/>;
   }
   return (
     <div className="images-view" onDrop={handleDrop} data-dropdown-parent>
