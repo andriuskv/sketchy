@@ -1,0 +1,10 @@
+.end-session-image-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.session-close-btn {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-md);
+}

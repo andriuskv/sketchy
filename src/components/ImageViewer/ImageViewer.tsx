@@ -1,226 +1,264 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent, type PointerEvent as ReactPointerEvent, useEffectEvent } from "react";
 import Icon from "components/Icon/Icon";
-import "./image-viewer.css";
-import EndSessionView from "./EndSessionView/EndSessionView";
-import useWorker from "./useWorker";
+import "./ImageViewer.css";
 
 type Props = {
-  session: Session,
+  images: Image[],
+  index: number,
+  overlay?: boolean,
+  inSession?: boolean,
+  pause?: () => void,
+  skip?: (manual?: boolean) => void,
+  onImageReady?: (event: SyntheticEvent) => void,
   close: () => void
 }
 
-type StateText = "Starting" | "Continuing" | "Skipping" | "Loading";
-
-type State = {
-  loading: boolean,
-  grace: number,
-  stateText: StateText,
-  stateId: number
-  current: string | null,
-  paused: boolean,
-  duration: number,
-  index: number
+type StateImage = {
+  index: number,
+  url: string
 }
 
-const PAUSE_DURATION = 3;
-const STARTING = 0;
-const CONTINUING = 1;
-const SKIPPING = 2;
-const LOADING = 3;
+export default function ImageViewer({ images, index, overlay, inSession, pause, skip, onImageReady, close }: Props) {
+  const [image, setImage] = useState<StateImage>(() => ({
+      index,
+      url: URL.createObjectURL(images[index].file)
+  }));
+  const pointerPosStart = useRef({ x: 0, y: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
+  const initialScale = useRef(1);
+  const root = useRef(document.documentElement);
 
-export default function ImageViewer({ session, close }: Props) {
-  const [state, setState] = useState<State>({
-    loading: true,
-    grace: PAUSE_DURATION,
-    stateText: "Starting",
-    stateId: STARTING,
-    current: null,
-    paused: false,
-    duration: session.duration,
-    index: 0
-  });
-  const [sessionEnded, setSessionEnded] = useState(false);
-  const preloaded = useRef<{ [key: string]: string }>({});
-  const { initWorker, destroyWorkers } = useWorker(handleMessage, [state.index, state.loading, state.paused]);
+  function nextImage() {
+    const nextIndex = image.index + 1;
+    const index = nextIndex === images.length ? 0 : nextIndex;
 
-  useEffect(() => {
-    initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION });
-    preloadImage(0, session.images[0].name);
+    URL.revokeObjectURL(image.url);
 
-    return () => {
-      destroyWorkers();
-    };
-  }, []);
-
-  useEffect(() => {
-    function handleKeydown({ key }: KeyboardEvent) {
-      if (sessionEnded) {
-        return;
-      }
-
-      if (key === "ArrowRight") {
-        skip(true);
-      }
-      else if (key === "Escape" ) {
-        pause();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeydown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeydown);
-    };
-  }, [state, sessionEnded]);
-
-  function handleMessage(event: MessageEvent) {
-    if (event.data.id === "grace") {
-      if (event.data.duration < 0) {
-        setState({
-          ...state,
-          paused: false,
-          grace: event.data.duration,
-          current: preloaded.current[session.images[state.index].name]
-        });
-      }
-      else if (document.visibilityState === "visible" && document.startViewTransition) {
-        document.startViewTransition(() => {
-          setState({ ...state, grace: event.data.duration });
-        });
-      }
-      else {
-        setState({ ...state, grace: event.data.duration });
-      }
-    }
-    else if (event.data.id === "duration") {
-      if (event.data.duration < 0) {
-        skip();
-      }
-      else {
-        setState({ ...state, duration: event.data.duration });
-      }
-    }
-  }
-
-  function preloadImage(index: number, name: string) {
-    if (preloaded.current[name]) {
-      return;
-    }
-    const url = URL.createObjectURL(session.images[index].file);
-    preloaded.current[name] = url;
-
-    const img = new Image();
-    img.src = url;
-  }
-
-  function handleImageLoad() {
-    setState({ ...state, loading: false });
-    initWorker({ id: "duration", action: "start", duration: state.duration });
-  }
-
-  function skip(manual = false) {
-    if (state.loading || state.paused) {
-      return;
-    }
-    const nextIndex = state.index + 1;
-
-    if (nextIndex === session.images.length) {
-      endSession();
-      return;
-    }
-
-    if (state.current) {
-      URL.revokeObjectURL(state.current);
-    }
-    destroyWorkers();
-    setState({
-      ...state,
-      grace: manual ? PAUSE_DURATION : session.grace,
-      loading: true,
-      stateText: manual ? "Skipping" : "Loading",
-      stateId: manual ? SKIPPING : LOADING,
-      duration: session.duration,
-      index: nextIndex
+    setImage({
+      index: index,
+      url: URL.createObjectURL(images[index].file)
     });
-    initWorker({ id: "grace", action: "start", duration: manual ? PAUSE_DURATION : session.grace });
-    preloadImage(nextIndex, session.images[nextIndex].name);
   }
 
-  function pause() {
-    if (state.loading) {
+  function prevImage() {
+    const prevIndex = image.index - 1;
+
+    URL.revokeObjectURL(image.url);
+
+    if (prevIndex === -1) {
+      setImage({
+        index: images.length - 1,
+        url: URL.createObjectURL(images[images.length - 1].file)
+      });
       return;
     }
-    const paused = !state.paused;
+    setImage({
+      index: prevIndex,
+      url: URL.createObjectURL(images[prevIndex].file)
+    });
+  }
 
-    destroyWorkers();
+  function zoomIn() {
+    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const scale = parseFloat(target.style.getPropertyValue("--scale"));
+    let nextScale = scale + scale * 0.15;
 
-    if (paused) {
-      setState({ ...state, paused, duration: state.duration, grace: session.grace  });
+    if (nextScale > 16) {
+      nextScale = 16;
+    }
+    target.style.setProperty("--scale", (nextScale).toString());
+  }
+
+  function zoomOut() {
+
+    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const scale = parseFloat(target.style.getPropertyValue("--scale"));
+    let nextScale = scale - scale * 0.15;
+
+    if (nextScale < 0.2) {
+      nextScale =  0.2;
+    }
+    target.style.setProperty("--scale", (nextScale).toString());
+  }
+
+  function hideImage() {
+    URL.revokeObjectURL(image.url);
+    close();
+  }
+
+  const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    const { key } = event;
+
+    if (key === "ArrowLeft") {
+      prevImage();
+    }
+    else if (key === "ArrowRight") {
+      nextImage();
+    }
+    else if (key === "=") {
+      zoomIn();
+    }
+    else if (key === "-") {
+      zoomOut();
+    }
+    else if (key === "Escape" ) {
+      hideImage();
+    }
+  });
+  const onWheel = useEffectEvent((event: WheelEvent) => {
+    const { deltaY } = event;
+
+    if (deltaY > 0) {
+      zoomOut();
+
+    }
+    else if (deltaY < 0) {
+      zoomIn();
+    }
+  });
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("wheel", onWheel);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("wheel", onWheel);
+    };
+  }, [image]);
+
+  function resetImage() {
+    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const container = document.querySelector(".viewer-image-container") as HTMLDivElement;
+
+    target.style.setProperty("--dir", "1");
+    target.style.setProperty("--scale", initialScale.current.toString());
+    container.style.setProperty("--x", "50%");
+    container.style.setProperty("--y", "50%");
+  }
+
+  function mirrorImage() {
+    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const dir = parseInt(target.style.getPropertyValue("--dir"), 10);
+
+    target.style.setProperty("--dir", (dir === 1 ? -1 : 1).toString());
+  }
+
+  function showInOriginalSize() {
+    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    target.style.setProperty("--scale", "1");
+  }
+
+  function handlePointerDown(event: ReactPointerEvent) {
+    const imageElement = imageRef.current;
+
+    if (!imageElement || event.button !== 0) {
+      return;
+    }
+    const containerElement = imageElement.parentElement!;
+    const rect = containerElement.getBoundingClientRect();
+    const translateAmount = 0.5;
+    const x = event.clientX - rect.left - (rect.width * translateAmount);
+    const y = event.clientY - rect.top - (rect.height * translateAmount);
+
+    pointerPosStart.current.x = x;
+    pointerPosStart.current.y = y;
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp, { once: true });
+    root.current.style.cursor = "grabbing";
+  }
+
+  function handlePointerMove(event: PointerEvent) {
+    const target = document.querySelector(".viewer-image-container") as HTMLImageElement;
+    const viewWidth = document.documentElement.clientWidth;
+    const viewHeight = document.documentElement.clientHeight;
+    const { clientX, clientY } = event;
+    const x = ((clientX - pointerPosStart.current.x) / viewWidth) * 100;
+    const y = ((clientY - pointerPosStart.current.y) / viewHeight) * 100;
+
+    target.style.setProperty("--x", `${x}%`);
+    target.style.setProperty("--y", `${y}%`);
+  }
+
+  function handlePointerUp() {
+    root.current.style.cursor = "";
+    window.removeEventListener("pointermove", handlePointerMove);
+  }
+
+  function handleImageLoad(event: SyntheticEvent) {
+    const target = event.target as HTMLImageElement;
+    const { width, height } = target;
+    const viewWidth = document.documentElement.clientWidth;
+    const viewHeight = document.documentElement.clientHeight;
+    let scale = 1;
+
+    if (width > height) {
+      scale = viewWidth / width;
+
+      if (scale * height >= viewHeight) {
+        scale = viewHeight / height;
+      }
+    }
+    else if (height >= viewHeight) {
+      scale = viewHeight / height;
+
+      if (scale * width >= viewWidth) {
+        scale = viewWidth / width;
+      }
     }
     else {
-      setState({
-        ...state,
-        paused,
-        loading: true,
-        duration: state.duration,
-        grace: PAUSE_DURATION,
-        stateText: "Continuing",
-        stateId: CONTINUING
-      });
-      initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION });
+      scale = viewHeight / height;
+    }
+    initialScale.current = scale;
+    target.style.setProperty("--scale", scale.toString());
+    target.style.setProperty("--dir", "1");
+
+    if (onImageReady) {
+      onImageReady(event);
     }
   }
 
-  function endSession() {
-    if (state.current) {
-      URL.revokeObjectURL(state.current);
-    }
-    destroyWorkers();
-    setSessionEnded(true);
-  }
-
-  if (sessionEnded) {
-    return <EndSessionView images={session.images} close={close}/>;
-  }
   return (
-    <div className="viewer">
-      {state.paused ? (
-        <div className="viewer-paused">
-          <h2 className="viewer-paused-title">Paused</h2>
-          <div className="viewer-paused-buttons">
-            <button className="btn primary-btn" onClick={pause}>Continue</button>
-            <button className="btn text-btn" onClick={endSession}>Quit</button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {state.loading ? null : (
-            <>
-              <div className="viewer-bar viewer-top-bar">
-                <div className="viewer-bar-progress-container">
-                  <div className="viewer-bar-progress-bar" style={{ scale: `${1 - (state.duration / session.duration)} 1` }}></div>
-                </div>
-                <button className="btn icon-btn viewer-close-btn" onClick={pause} title="pause">
-                  <Icon id="pause"/>
-                </button>
-              </div>
-              <div className="viewer-bar viewer-bottom-bar">
-                <span className="viewer-bar-item-info">{state.index + 1} / {session.images.length}</span>
-                <button className="btn text-btn" onClick={() => skip(true)}>Skip</button>
-              </div>
-            </>
-          )}
-          {state.grace > -1 ? (
-            <div className="viewer-grace">
-              <div className="viewer-grace-text">{state.stateText}</div>
-              <div className="viewer-grace-value">{state.grace}</div>
-              {state.stateId === LOADING && session.grace >= 10 ? <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`} onClick={endSession}>Quit</button> : null}
-            </div>
-          ) : (
-            <img src={state.current!} onLoad={handleImageLoad} className={`viewer-image`}/>
-          )}
-        </>
-      )}
+    <div className={`viewer${overlay ? " overlay" : ""}`} onPointerDown={handlePointerDown}>
+      <div className="viewer-bar viewer-top-bar">
+        <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
+          <Icon id="image-full"/>
+        </button>
+        <button className="btn icon-btn" onClick={mirrorImage} title="Mirror horizontally">
+          <Icon id="flip-horizontal"/>
+        </button>
+        <button className="btn icon-btn" onClick={resetImage} title="Reset">
+          <Icon id="reset"/>
+        </button>
+        {inSession ? (
+          <button className="btn icon-btn" onClick={pause} title="pause">
+            <Icon id="pause"/>
+          </button>
+        ) : (
+        <button className="btn icon-btn" onClick={hideImage} title="Close">
+          <Icon id="close"/>
+        </button>
+        )}
+      </div>
+      <div className="viewer-image-container">
+        <img src={image.url} className="viewer-image" onLoad={handleImageLoad} draggable="false" ref={imageRef}/>
+      </div>
+      <div className="viewer-bar viewer-bottom-bar">
+        {inSession ? null : <span className="viewer-bar-item-info text-overflow">{images[image.index].name}</span>}
+        <span className="viewer-bar-item-info">{image.index + 1} / {images.length}</span>
+        {inSession && skip ? (
+          <button className="btn text-btn" onClick={() => skip(true)}>Skip</button>
+        ): (
+          <>
+            <button className="btn icon-btn" onClick={prevImage} title="Previous">
+              <Icon id="chevron-left"/>
+            </button>
+            <button className="btn icon-btn" onClick={nextImage} title="Next">
+              <Icon id="chevron-right"/>
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
