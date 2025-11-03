@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type SyntheticEvent, type PointerEvent as ReactPointerEvent, useEffectEvent } from "react";
 import Icon from "components/Icon/Icon";
 import "./ImageViewer.css";
+import * as pip from "./picture-in-picture"
 
 type Props = {
   images: Image[],
@@ -218,9 +219,27 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
     }
   }
 
+  function togglePip() {
+    pip.toggle({
+      data: {
+        image,
+        count: images.length
+      },
+      actions: {
+        skip: () => skip!(true),
+        pause: () => pause!()
+      }
+    });
+  }
+
   return (
     <div className={`viewer${overlay ? " overlay" : ""}`} onPointerDown={handlePointerDown}>
       <div className="viewer-bar viewer-top-bar">
+        {inSession && pip.isSupported() ? (
+          <button className="btn icon-btn" onClick={togglePip} title="Picture-in-picture">
+            <Icon id="pip"/>
+          </button>
+        ) : null}
         <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
           <Icon id="image-full"/>
         </button>

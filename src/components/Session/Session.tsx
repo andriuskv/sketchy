@@ -3,6 +3,7 @@ import "./Session.css";
 import EndSessionView from "./EndSessionView/EndSessionView";
 import useWorker from "./useWorker";
 import ImageViewer from "../ImageViewer/ImageViewer";
+import * as pip from "../ImageViewer/picture-in-picture";
 
 type Props = {
   session: Session,
@@ -48,7 +49,10 @@ export default function Session({ session, close }: Props) {
     };
   }, []);
 
-  function endSession() {
+  function endSession(fromPip = false) {
+    if (!fromPip) {
+      pip.close();
+    }
     destroyWorkers();
     setSessionEnded(true);
   }
@@ -74,6 +78,13 @@ export default function Session({ session, close }: Props) {
       index: nextIndex
     });
     initWorker({ id: "grace", action: "start", duration: manual ? PAUSE_DURATION : session.grace });
+    pip.updateImage({
+      index: state.index,
+      url: URL.createObjectURL(session.images[state.index].file)
+    }, session.images.length);
+    pip.updateGraceView(manual ? PAUSE_DURATION : session.grace, manual ? "Skipping" : "Loading", false);
+    pip.toggleGraceView(true);
+    pip.updateProgressBar(0);
   }
 
   function pause() {
@@ -85,9 +96,12 @@ export default function Session({ session, close }: Props) {
     destroyWorkers();
 
     if (paused) {
+      pip.handlePipPause(paused);
       setState({ ...state, paused, duration: state.duration, grace: session.grace  });
     }
     else {
+      pip.updateGraceView(PAUSE_DURATION, "Continuing", false);
+      pip.toggleGraceView(true);
       setState({
         ...state,
         paused,
@@ -99,6 +113,15 @@ export default function Session({ session, close }: Props) {
       });
       initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION });
     }
+  }
+
+  function skipWaiting() {
+    destroyWorkers();
+    setState({
+      ...state,
+      grace: -1,
+      loading: false
+    });
   }
 
   useEffect(() => {
@@ -122,21 +145,27 @@ export default function Session({ session, close }: Props) {
     };
   }, [state, sessionEnded]);
 
+  useEffect(() => {
+    pip.updateActions({
+      skip: () => skip(true),
+      pause: () => pause(),
+      endSession: () => endSession(true),
+      skipWaiting: () => skipWaiting()
+    });
+  }, [state]);
+
   function handleMessage(event: MessageEvent) {
     if (event.data.id === "grace") {
       if (event.data.duration < 0) {
+        pip.handlePipPause(false);
         setState({
           ...state,
           paused: false,
           grace: event.data.duration,
         });
       }
-      else if (document.visibilityState === "visible" && document.startViewTransition) {
-        document.startViewTransition(() => {
-          setState({ ...state, grace: event.data.duration });
-        });
-      }
       else {
+        pip.updateGraceView(event.data.duration, state.stateText, state.grace < session.grace - PAUSE_DURATION);
         setState({ ...state, grace: event.data.duration });
       }
     }
@@ -146,6 +175,7 @@ export default function Session({ session, close }: Props) {
       }
       else {
         setState({ ...state, duration: event.data.duration });
+        pip.updateProgressBar(1 - (event.data.duration / session.duration));
       }
     }
   }
@@ -165,7 +195,7 @@ export default function Session({ session, close }: Props) {
           <h2 className="session-paused-title">Paused</h2>
           <div className="session-paused-buttons">
             <button className="btn primary-btn" onClick={pause}>Continue</button>
-            <button className="btn text-btn" onClick={endSession}>Quit</button>
+            <button className="btn text-btn" onClick={() => endSession()}>Quit</button>
           </div>
         </div>
       ) : (
@@ -179,7 +209,14 @@ export default function Session({ session, close }: Props) {
             <div className="session-grace">
               <div className="session-grace-text">{state.stateText}</div>
               <div className="session-grace-value">{state.grace}</div>
-              {state.stateId === LOADING && session.grace >= 10 ? <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`} onClick={endSession}>Quit</button> : null}
+              {state.stateId === LOADING && session.grace >= 10 ? (
+                <div className="session-grace-btns">
+                  <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`}
+                    onClick={skipWaiting}>Skip Waiting</button>
+                  <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`}
+                    onClick={() => endSession()}>Quit</button>
+                </div>
+              ) : null}
             </div>
           ) : (
             <ImageViewer images={session.images} index={state.index} inSession pause={pause} skip={skip} onImageReady={handleImageLoad} close={endSession}/>
