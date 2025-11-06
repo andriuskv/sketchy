@@ -167,6 +167,7 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp, { once: true });
     root.current.style.cursor = "grabbing";
+    root.current.style.userSelect = "none";
   }
 
   function handlePointerMove(event: PointerEvent) {
@@ -183,6 +184,7 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
 
   function handlePointerUp() {
     root.current.style.cursor = "";
+    root.current.style.userSelect = "";
     window.removeEventListener("pointermove", handlePointerMove);
   }
 

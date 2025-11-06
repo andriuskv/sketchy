@@ -7,10 +7,10 @@
   height: auto;
   padding: var(--space-md);
   box-shadow: var(--highligh-shadow);
-  background-color: var(--color-grey-30);
+  background-color: light-dark(var(--color-white), var(--color-grey-30));
 
   &:hover {
-    background-color: var(--color-grey-20);
+    background-color: light-dark(hsl(from var(--color-white) h 80% 95%), var(--color-grey-30));
   }
 
   &:focus-visible {
