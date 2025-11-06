@@ -10,7 +10,8 @@ import Icon from "components/Icon/Icon";
 function App() {
   const [images, setImages] = useState<Image[]>([]);
   const [session, setSession] = useState<Session | null>(null);
-  const seletedImages = images.filter(image => image.selected);
+  const [sortOptions, setSortOptions] = useState({ sortBy: "default", sortOrder: 1 });
+  const seletedImageCount = images.filter(image => image.selected).length;
   const [uploading, setUploading] = useState(false);
 
   async function handleDrop(event: DragEvent<HTMLDivElement>) {
@@ -21,18 +22,17 @@ function App() {
     }
     setUploading(true);
     event.dataTransfer.dropEffect = "copy";
+    const newImages = await filesService.readItems(event.dataTransfer.items, images);
 
-    const items = await filesService.readItems(event.dataTransfer.items, images);
-
-    setImages(images.concat(items.map(item => ({ file: item, name: item.name, selected: true }))));
+    setImages(images.concat(newImages));
     setUploading(false);
   }
 
   async function showFilePicker() {
     try {
       setUploading(true);
-      const files = await filesService.showOpenFilePicker();
-      setImages(images.concat(filesService.removeDuplicates(files, images)));
+      const newImages = await filesService.showOpenFilePicker(images);
+      setImages(images.concat(newImages));
     } catch (e) {
       console.log(e);
     } finally {
@@ -43,8 +43,8 @@ function App() {
   async function showDirPicker() {
     try {
       setUploading(true);
-      const files = await filesService.showDirectoryPicker();
-      setImages(images.concat(filesService.removeDuplicates(files, images)));
+      const newImages = await filesService.showDirectoryPicker(images);
+      setImages(images.concat(newImages));
     } catch (e) {
       console.log(e);
     } finally {
@@ -56,12 +56,8 @@ function App() {
     if (!target.files) {
       return;
     }
-    const newFiles: Image[] = [];
-
-    for (const file of target.files) {
-      newFiles.push({ file, name: file.name, selected: true });
-    }
-    setImages(images.concat(filesService.removeDuplicates(newFiles, images)));
+    const newImages = filesService.getUniqueImages(target.files as unknown as File[], images);
+    setImages(images.concat(newImages));
     target.value = "";
   }
 
@@ -79,6 +75,7 @@ function App() {
     const elements = formElement.elements as FormElements;
 
     const { count, randomize, duration, grace } = elements;
+    const seletedImages = images.filter(image => image.selected);
     const sessionImages =  randomize.checked ?
       shuffleArray(seletedImages).slice(0, parseInt(count.value, 10)) :
       seletedImages.slice(0, parseInt(count.value, 10));
@@ -125,6 +122,16 @@ function App() {
     setImages(newImages);
   }
 
+  function sortImages(sortBy: string, sortOrder: number = 1) {
+    if (sortBy === sortOptions.sortBy && sortOrder === sortOptions.sortOrder) {
+      return;
+    }
+    const sortedFiles = filesService.sortFiles(images, { sortBy, sortOrder });
+
+    setImages(sortedFiles);
+    setSortOptions({ sortBy, sortOrder });
+  }
+
   if (session) {
     return <Session session={session} close={closeSession}/>;
   }
@@ -137,10 +144,10 @@ function App() {
         </div>
       ) : null}
       {images.length ?
-        <ImageList images={images} handleImageSelection={handleImageSelection}/> :
+        <ImageList images={images} handleImageSelection={handleImageSelection} sortOptions={sortOptions} sortImages={sortImages}/> :
         <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange}/>
       }
-      <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImages.length} startSession={startSession} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange}/>
+      <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImageCount} startSession={startSession} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange}/>
     </div>
   );
 }

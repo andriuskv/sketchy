@@ -3,23 +3,21 @@ import { useInView } from "react-intersection-observer";
 import { getThumb, generateThumb } from "services/files";
 import "./image-list.css";
 import ToTop from "./ToTop/ToTop";
+import Sort from "./Sort/Sort";
 
 type ListProps = {
-  images: {
-    name: string,
-    file: File,
-    selected: boolean
-  }[],
+  images: Image[],
+  sortOptions?: {
+    sortBy: string,
+    sortOrder: number
+  },
   handleImageSelection?: (event: React.ChangeEvent<HTMLInputElement>, index: number) => void,
-  viewImage?: (index: number, file: File) => void
+  viewImage?: (index: number, file: File) => void,
+  sortImages?: (sortBy: string, sortOrder?: number) => void
 }
 
 type ItemProps = {
-  image: {
-    name: string,
-    file: File,
-    selected: boolean
-  },
+  image: Image,
   index: number,
   container: React.RefObject<HTMLDivElement | null> ,
   handleImageSelection?: (event: React.ChangeEvent<HTMLInputElement>, index: number) => void,
@@ -71,16 +69,21 @@ function Item({ image, index, container, handleImageSelection, viewImage }: Item
   return <li className="image-list-item" ref={ref}></li>;
 }
 
-export default function ImageList({ images, handleImageSelection, viewImage }: ListProps) {
+export default function ImageList({ images, handleImageSelection, viewImage, sortOptions, sortImages }: ListProps) {
   const container = useRef<HTMLDivElement>(null);
   return (
-    <div className="image-list-container" ref={container}>
-      <ul className="container image-list">
-        {images.map((image, index) => (
-          <Item image={image} index={index} key={image.name} container={container}
-            handleImageSelection={handleImageSelection} viewImage={viewImage}/>
-        ))}
-      </ul>
+    <div className="image-list-view">
+      {sortOptions && sortImages ? <div className="container image-list-header">
+        <Sort sortOptions={sortOptions} sortImages={sortImages}/>
+      </div> : null}
+      <div className="image-list-container" ref={container}>
+        <ul className="container image-list">
+          {images.map((image, index) => (
+            <Item image={image} index={index} key={image.name} container={container}
+              handleImageSelection={handleImageSelection} viewImage={viewImage}/>
+          ))}
+        </ul>
+      </div>
       {handleImageSelection ? <ToTop offset="200px"/> : <ToTop/> }
     </div>
   );

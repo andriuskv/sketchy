@@ -323,6 +323,33 @@ textarea {
   }
 }
 
+.radio-container {
+  display: flex;
+  align-items: center;
+}
+
+.radio-input {
+  &:checked + .radio {
+    background-color: var(--color-primary);
+  }
+
+  &:focus-visible + .radio {
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+}
+
+.radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 6px solid var(--color-grey-50);
+  background-color: var(--color-grey-50);
+}
+
+.radio-label {
+  margin-left: var(--space-md);
+}
+
 .images-view {
   display: grid;
   height: 100%;

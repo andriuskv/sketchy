@@ -1,6 +1,9 @@
 type Image = {
+  index: number,
   file: File,
   name: string,
+  size: number,
+  date: number,
   selected: boolean
 };
 

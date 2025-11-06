@@ -1,7 +1,11 @@
+.image-list-view {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .image-list-container {
   overflow: auto;
-  grid-row: 1 / 1;
-  grid-column: 1 / 1;
 }
 
 .image-list {
@@ -20,6 +24,14 @@
       contain-intrinsic-size: initial;
     }
   }
+}
+
+.image-list-header {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-md);
 }
 
 .image-list-item {
