@@ -60,8 +60,26 @@ async function readItems(items: DataTransferItemList, uploadedItems: Image[] = [
       files.push(item);
     }
   }
+  return getUniqueImages(files, uploadedItems);
+}
 
-  return removeDuplicates(files, uploadedItems);
+function getUniqueImages(files: File[], images: Image[]) {
+  const newImages: Image[] = [];
+  let index = images.length;
+
+  for (const file of files) {
+    newImages.push({
+      index,
+      file,
+      name: file.name,
+      date: file.lastModified,
+      size: file.size,
+      selected: true
+    });
+    index += 1;
+  }
+
+  return removeDuplicates(newImages, images);
 }
 
 function removeDuplicates<T>(newItems: (T & { name: string })[], existingItems: Image[]): T[] {
@@ -102,7 +120,7 @@ function readFile(entry: FileSystemFileEntry): Promise<File> {
   });
 }
 
-async function showOpenFilePicker() {
+async function showOpenFilePicker(images: Image[]) {
   const handles = await (window as any).showOpenFilePicker({
     multiple: true,
     excludeAcceptAllOption: true,
@@ -114,25 +132,85 @@ async function showOpenFilePicker() {
     }]
   });
   const files: Image[] = [];
+  // Would be better to find largest index
+  let index = images.length;
 
   for (const handle of handles) {
     const file = await handle.getFile();
-    files.push({ file, name: file.name, selected: true });
+      files.push({
+        index,
+        file,
+        name: file.name,
+        date: file.lastModified,
+        size: file.size,
+        selected: true
+      });
+      index += 1;
   }
-  return files;
+  return removeDuplicates(files, images);
 }
 
-async function showDirectoryPicker() {
+async function showDirectoryPicker(images: Image[]) {
   const handle = await (window as any).showDirectoryPicker();
   const files: Image[] = [];
+  // Would be better to find largest index
+  let index = images.length;
 
   for await (const value of handle.values()) {
     if (value.kind === "file") {
       const file = await value.getFile();
-      files.push({ file, name: file.name, selected: true });
+      files.push({
+        index,
+        file,
+        name: file.name,
+        date: file.lastModified,
+        size: file.size,
+        selected: true
+      });
+      index += 1;
     }
   }
-  return files;
+  return removeDuplicates(files, images);
+}
+
+function getSortingValue(sortBy: string, file: Image) {
+    if (sortBy === "default") {
+      return file.index;
+    }
+    if (sortBy === "date") {
+      return file.date;
+    }
+    else if (sortBy === "size") {
+      return file.size;
+    }
+    else if (sortBy === "name") {
+      // Remove special characters.
+      return file.name.toLowerCase().replace(/[^\w\s]/gi, "");
+    }
+    return 0;
+  }
+
+function sortFiles(files: Image[], { sortBy, sortOrder }: { sortBy: string, sortOrder: number }) {
+  if (sortBy === "last-accessed") {
+    // Invert sort order because we want most recently read files to appear first.
+    return sortBySortingValue(files, sortBy, -sortOrder);
+  }
+  return sortBySortingValue(files, sortBy, sortOrder);
+}
+
+function sortBySortingValue(images: Image[], sortBy: string, sortOrder: number) {
+  return images.toSorted((a, b) => {
+    const aValue = getSortingValue(sortBy, a);
+    const bValue = getSortingValue(sortBy, b);
+
+    if (aValue < bValue) {
+      return -sortOrder;
+    }
+    else if (aValue > bValue) {
+      return sortOrder;
+    }
+    return 0;
+  });
 }
 
 function getThumb(name: string) {
@@ -196,6 +274,8 @@ window.addEventListener("dragover", event => {
 export {
   preloadImage,
   cleanupPreloadedImages,
+  getUniqueImages,
+  sortFiles,
   readItems,
   removeDuplicates,
   showOpenFilePicker,

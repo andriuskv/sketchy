@@ -34,21 +34,21 @@ export default function ToTop({ offset } : {offset?: string }) {
       });
     }
     const element = ref.current!;
-    const parent = element.parentElement!;
+    const sibling = element.previousElementSibling!;
 
     if (element) {
-      parent.addEventListener("scroll", handleScroll);
+      sibling.addEventListener("scroll", handleScroll);
     }
     return () => {
       if (element) {
-        parent.removeEventListener("scroll", handleScroll);
+        sibling.removeEventListener("scroll", handleScroll);
       }
     };
   }, [state]);
 
   function handleClick({ currentTarget }: MouseEvent<HTMLButtonElement>) {
-    if (currentTarget.parentElement) {
-      currentTarget.parentElement.scrollTop = 0;
+    if (currentTarget.previousElementSibling) {
+      currentTarget.previousElementSibling.scrollTop = 0;
     }
   }
 
