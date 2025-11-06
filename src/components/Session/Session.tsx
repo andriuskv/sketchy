@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import * as fileService from "services/files";
 import "./Session.css";
 import EndSessionView from "./EndSessionView/EndSessionView";
 import useWorker from "./useWorker";
@@ -80,7 +81,7 @@ export default function Session({ session, close }: Props) {
     initWorker({ id: "grace", action: "start", duration: manual ? PAUSE_DURATION : session.grace });
     pip.updateImage({
       index: state.index,
-      url: URL.createObjectURL(session.images[state.index].file)
+      url: fileService.preloadImage(session.images[state.index])
     }, session.images.length);
     pip.updateGraceView(manual ? PAUSE_DURATION : session.grace, manual ? "Skipping" : "Loading", false);
     pip.toggleGraceView(true);

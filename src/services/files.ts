@@ -7,6 +7,27 @@ let thumbs: {
   }
 } = {};
 
+let preloaded: { [name: string]: string } = {};
+
+function preloadImage(image: Image) {
+  if (preloaded[image.name]) {
+    return preloaded[image.name];
+  }
+  const url = URL.createObjectURL(image.file);
+  preloaded[image.name] = url;
+
+  const img = new Image();
+  img.src = url;
+  return preloaded[image.name];
+}
+
+function cleanupPreloadedImages() {
+  for (const name in preloaded) {
+    URL.revokeObjectURL(preloaded[name]);
+  }
+  preloaded = {};
+}
+
 function isSupportedMimeType(type: string) {
   return type.startsWith("image");
 }
@@ -173,6 +194,8 @@ window.addEventListener("dragover", event => {
 });
 
 export {
+  preloadImage,
+  cleanupPreloadedImages,
   readItems,
   removeDuplicates,
   showOpenFilePicker,
