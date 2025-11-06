@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type SyntheticEvent, type PointerEvent as ReactPointerEvent, useEffectEvent } from "react";
+import * as fileService from "services/files";
 import Icon from "components/Icon/Icon";
 import "./ImageViewer.css";
 import * as pip from "./picture-in-picture"
@@ -22,7 +23,7 @@ type StateImage = {
 export default function ImageViewer({ images, index, overlay, inSession, pause, skip, onImageReady, close }: Props) {
   const [image, setImage] = useState<StateImage>(() => ({
       index,
-      url: URL.createObjectURL(images[index].file)
+      url: fileService.preloadImage(images[index])
   }));
   const pointerPosStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
@@ -37,7 +38,7 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
 
     setImage({
       index: index,
-      url: URL.createObjectURL(images[index].file)
+      url: fileService.preloadImage(images[index])
     });
   }
 
@@ -49,13 +50,13 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
     if (prevIndex === -1) {
       setImage({
         index: images.length - 1,
-        url: URL.createObjectURL(images[images.length - 1].file)
+        url: fileService.preloadImage(images[images.length - 1])
       });
       return;
     }
     setImage({
       index: prevIndex,
-      url: URL.createObjectURL(images[prevIndex].file)
+      url: fileService.preloadImage(images[prevIndex])
     });
   }
 
