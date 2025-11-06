@@ -3,13 +3,14 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  touch-action: none;
 
   .icon-btn {
-    --color: var(--color-white-60);
+    --color: light-dark(var(--color-black-30), var(--color-white-60));
 
     &:hover, &:focus-visible {
-      --color: var(--color-white);
-      --background-color: var(--color-white-10);
+      --color: light-dark(var(--color-black-60), var(--color-white));
+      --background-color: light-dark(var(--color-black-4), var(--color-white-10));
     }
   }
 
@@ -18,6 +19,19 @@
     position: fixed;
     inset: 0;
     background-color: var(--color-black-60);
+
+    .icon-btn {
+      --color: var(--color-white-60);
+
+      &:hover, &:focus-visible {
+        --color: var(--color-white);
+        --background-color: var(--color-white-10);
+      }
+    }
+
+    .viewer-bar-item-info {
+      color: light-dark(var(--color-white-90), var(--color-white-90));
+    }
   }
 }
 

@@ -11,7 +11,7 @@ html {
   color-scheme: dark light;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
-  color: light-dark(#213547, rgba(255, 255, 255, 0.87));
+  color: light-dark(var(--color-black-60), var(--color-white-90));
   background-color: light-dark(var(--color-white), var(--color-grey-50));
   font-synthesis: none;
   text-rendering: optimizeLegibility;
