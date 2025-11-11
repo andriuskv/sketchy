@@ -15,3 +15,9 @@ type Prefs = {
 };
 
 type Session = Prefs & { images: Image[] };
+
+type FormSession = Prefs & {
+  id: string,
+  active: boolean,
+  title: string
+};

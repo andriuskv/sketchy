@@ -13,10 +13,10 @@ type Props = {
 
 export default function Splash({ uploading, showFilePicker, showDirPicker, handleFileChange }: Props) {
   return (
-    <div className="splash">
+    <main className="splash">
       <div className="splash-title-container">
         <h1 className="splash-title">Sketchy</h1>
-        <h1 className="splash-subtitle">Timed Drawing Practice</h1>
+        <h2 className="splash-subtitle">Timed Drawing Practice</h2>
       </div>
       <p className="splash-description">Click to upload or drop your images here</p>
       <div className="splash-btns">
@@ -26,6 +26,6 @@ export default function Splash({ uploading, showFilePicker, showDirPicker, handl
           showDirPicker={showDirPicker} handleFileChange={handleFileChange} disabled={uploading}/>
       </div>
       <ThemeSelector/>
-    </div>
+    </main>
   );
 }

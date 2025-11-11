@@ -15,6 +15,7 @@ export default [
   reactHooks.configs.flat.recommended,
   reactHooks.configs.flat["recommended-latest"],
   reactRefresh.configs.vite,
+  reactCompiler.configs.recommended,
   {
     files: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
     languageOptions: {
@@ -22,16 +23,14 @@ export default [
       globals: globals.browser,
     },
     plugins: {
-      react,
-      "react-compiler": reactCompiler
+      react
     },
     rules: {
       "@typescript-eslint/no-require-imports": 0,
       "@typescript-eslint/ban-ts-comment": 0,
       "@typescript-eslint/no-explicit-any": 0,
       "react/react-in-jsx-scope": 0,
-      "react-hooks/exhaustive-deps": 0,
-      "react-compiler/react-compiler": "error",
+      "react-hooks/exhaustive-deps": 0
     }
   }
 ];

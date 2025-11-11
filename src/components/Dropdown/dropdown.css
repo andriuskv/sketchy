@@ -18,7 +18,8 @@
   background-color: light-dark(var(--color-white), var(--color-grey-40));
   transform: translateY(var(--space-sm));
   white-space: nowrap;
-  border-radius: 8px;
+  border-radius: 12px;
+  corner-shape: squircle;
 
   &.portal {
     z-index: 100;
@@ -60,7 +61,7 @@
   &:has(+ :where(.dropdown-group, .dropdown-btn)) {
     margin-bottom: var(--space-md);
     padding-bottom: var(--space-md);
-    border-bottom: 1px solid var(--color-white-10);
+    border-bottom: 1px solid light-dark(var(--color-black-4), var(--color-white-10));
   }
 }
 
