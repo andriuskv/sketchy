@@ -1,6 +1,7 @@
 import type { CSSProperties, MouseEvent as ReactMouseEvent, PropsWithChildren, ReactNode } from "react";
-import { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { getRandomString } from "@/utils";
 import "./dropdown.css";
 import ToggleBtn from "./ToggleBtn/ToggleBtn";
 
@@ -37,82 +38,15 @@ type State = {
 
 export default function Dropdown({ container, toggle = {}, body, usePortal, children }: Props) {
   const [state, setState] = useState<State>({ id: getRandomString(), visible: false });
-  const memoizedWindowClickHandler = useMemo(() => handleWindowClick, [state.id]);
   const isMounted = useRef(false);
   const drop = useRef<HTMLDivElement>(null);
   const toggleBtn = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    isMounted.current = true;
-
-    return () => {
-      isMounted.current = false;
-      window.removeEventListener("click", memoizedWindowClickHandler);
-    };
-  }, [memoizedWindowClickHandler]);
-
-  useLayoutEffect(() => {
-    if (state.reveal) {
-      let onTop = false;
-
-      if (state.data && drop.current) {
-        const dropdownHeight = drop.current.getBoundingClientRect().height + 8;
-
-        if (state.data.bottom + dropdownHeight > state.data.height && state.data.top > dropdownHeight) {
-          onTop = true;
-        }
-      }
-      setState({
-        ...state,
-        onTop,
-        visible: true
-      });
+  function hideDropdown() {
+    if (isMounted.current) {
+      setState({ id: state.id, visible: false, reveal: false });
     }
-  }, [state.reveal]);
-
-  function getRandomString(length = 8) {
-    return Math.random().toString(32).slice(2, 2 + length);
-  }
-
-  function toggleDropdown(event: ReactMouseEvent) {
-    if (state.visible) {
-      hideDropdown();
-      return;
-    }
-    let data: State["data"] = null;
-
-    if (usePortal) {
-      if (toggleBtn.current) {
-        toggleBtn.current.style.setProperty("anchor-name", `--anchor-${state.id}`);
-      }
-      window.addEventListener("click", memoizedWindowClickHandler);
-    }
-    else {
-      const currentTarget = event.currentTarget as HTMLElement;
-      const container = currentTarget.parentElement!;
-      const element = getParentElement(container);
-
-      if (element) {
-        element.style.position = "relative";
-
-        data = {
-          top: container.offsetTop,
-          bottom: container.offsetTop + currentTarget.offsetHeight,
-          height: element.scrollTop + element.clientHeight
-        };
-
-        element.style.position = "";
-      }
-      window.addEventListener("click", memoizedWindowClickHandler);
-    }
-
-    setState({
-      id: state.id,
-      visible: false,
-      reveal: !state.visible,
-      data,
-      onTop: false
-    });
+    window.removeEventListener("click", handleWindowClick);
   }
 
   function handleWindowClick({ target }: MouseEvent) {
@@ -142,11 +76,75 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
     }
   }
 
-  function hideDropdown() {
-    if (isMounted.current) {
-      setState({ id: state.id, visible: false, reveal: false });
+  useEffect(() => {
+    isMounted.current = true;
+
+    return () => {
+      isMounted.current = false;
+      window.removeEventListener("click", handleWindowClick);
+    };
+  }, [state.id]);
+
+  function toggleDropdown(event: ReactMouseEvent) {
+    if (state.visible) {
+      hideDropdown();
+      return;
     }
-    window.removeEventListener("click", memoizedWindowClickHandler);
+    let data: State["data"] = null;
+
+    if (usePortal) {
+      if (toggleBtn.current) {
+        toggleBtn.current.style.setProperty("anchor-name", `--anchor-${state.id}`);
+      }
+      window.addEventListener("click", handleWindowClick);
+    }
+    else {
+      const currentTarget = event.currentTarget as HTMLElement;
+      const container = currentTarget.parentElement!;
+      const element = getParentElement(container);
+
+      if (element) {
+        element.style.position = "relative";
+
+        data = {
+          top: container.offsetTop,
+          bottom: container.offsetTop + currentTarget.offsetHeight,
+          height: element.scrollTop + element.clientHeight
+        };
+
+        element.style.position = "";
+      }
+      window.addEventListener("click", handleWindowClick);
+    }
+
+    const newState = {
+      id: state.id,
+      visible: false,
+      reveal: !state.visible,
+      data,
+      onTop: false
+    };
+
+    setState(newState);
+
+    if (newState.reveal) {
+      requestAnimationFrame(() => {
+        let onTop = false;
+
+        if (newState.data && drop.current) {
+          const dropdownHeight = drop.current.getBoundingClientRect().height + 8;
+
+          if (newState.data.bottom + dropdownHeight > newState.data.height && newState.data.top > dropdownHeight) {
+            onTop = true;
+          }
+        }
+        setState({
+          ...newState,
+          onTop,
+          visible: true
+        });
+      })
+    }
   }
 
   function getParentElement(element: HTMLElement | null) {

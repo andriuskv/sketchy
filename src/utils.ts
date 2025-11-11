@@ -19,7 +19,12 @@ function yieldWork() {
   return new Promise(resolve => setTimeout(resolve, 0));
 }
 
+function getRandomString(length = 8) {
+  return Math.random().toString(32).slice(2, 2 + length);
+}
+
 export {
   shuffleArray,
-  yieldWork
+  yieldWork,
+  getRandomString
 }

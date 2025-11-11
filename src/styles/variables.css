@@ -35,6 +35,7 @@
   --color-white-60: hsl(var(--accent-hue) 100% 97% / 60%);
   --color-white-80: hsl(var(--accent-hue) 100% 97% / 80%);
   --color-white-90: hsl(var(--accent-hue) 100% 97% / 90%);
+  --color-white-90-100: hsl(var(--accent-hue) 20% 90%);
 
   --color-black-2: hsl(var(--accent-hue) 0% 3% / 2%);
   --color-black-4: hsl(var(--accent-hue) 0% 3% / 4%);

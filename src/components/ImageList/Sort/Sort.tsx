@@ -30,7 +30,7 @@ export default function Sort({ sortOptions, sortImages }: Props) {
         className: "icon-text-btn sort-dropdown-toggle-btn"
       }}
       container={{ className: "sort-dropdown-container" }}>
-      <div className="sort-dropdown-group">
+      <div className="dropdown-group">
         <button className={`btn text-btn dropdown-btn sort-dropdown-btn${sortBy === "default" ? " active" : ""}`}
           onClick={() => sortImages("default")}>Default</button>
         <button className={`btn text-btn dropdown-btn sort-dropdown-btn${sortBy === "name" ? " active" : ""}`}
@@ -40,8 +40,8 @@ export default function Sort({ sortOptions, sortImages }: Props) {
         <button className={`btn text-btn dropdown-btn sort-dropdown-btn${sortBy === "size" ? " active" : ""}`}
           onClick={() => sortImages("size")}>Size</button>
       </div>
-      <div className="sort-dropdown-group">
-        <label className="dropdown-btn sort-dropdown-radio">
+      <div className="dropdown-group">
+        <label className="dropdown-btn radio-container sort-dropdown-radio">
           <input type="radio" className="sr-only radio-input"
             name="sortOrder" value="1"
             onChange={changeSortOrder}
@@ -49,7 +49,7 @@ export default function Sort({ sortOptions, sortImages }: Props) {
           <div className="radio"></div>
           <span className="radio-label">Ascending</span>
         </label>
-        <label className="dropdown-btn sort-dropdown-radio">
+        <label className="dropdown-btn radio-container sort-dropdown-radio">
           <input type="radio" className="sr-only radio-input"
             onChange={changeSortOrder}
             name="sortOrder" value="-1"

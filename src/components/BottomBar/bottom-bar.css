@@ -5,9 +5,20 @@
   padding: var(--space-xxl) var(--space-xl) var(--space-xl) var(--space-xxl);
   margin-top: var(--space-sm);
   corner-shape: squircle;
-  border-top-left-radius: 48px;
-  border-top-right-radius: 48px;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
   background-color: light-dark(var(--color-black-4), var(--color-white-10));
+
+  @supports (corner-shape: squircle) {
+    border-top-left-radius: 48px;
+    border-top-right-radius: 48px;
+  }
+}
+
+.bottom-bar-left-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 .bottom-bar-title {
