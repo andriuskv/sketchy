@@ -34,8 +34,6 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
     const nextIndex = image.index + 1;
     const index = nextIndex === images.length ? 0 : nextIndex;
 
-    URL.revokeObjectURL(image.url);
-
     setImage({
       index: index,
       url: fileService.preloadImage(images[index])
@@ -44,8 +42,6 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
 
   function prevImage() {
     const prevIndex = image.index - 1;
-
-    URL.revokeObjectURL(image.url);
 
     if (prevIndex === -1) {
       setImage({
@@ -72,7 +68,6 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
   }
 
   function zoomOut() {
-
     const target = document.querySelector(".viewer-image") as HTMLImageElement;
     const scale = parseFloat(target.style.getPropertyValue("--scale"));
     let nextScale = scale - scale * 0.15;
@@ -81,11 +76,6 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
       nextScale =  0.2;
     }
     target.style.setProperty("--scale", (nextScale).toString());
-  }
-
-  function hideImage() {
-    URL.revokeObjectURL(image.url);
-    close();
   }
 
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -104,7 +94,7 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
       zoomOut();
     }
     else if (key === "Escape" ) {
-      hideImage();
+      close();
     }
   });
   const onWheel = useEffectEvent((event: WheelEvent) => {
@@ -257,7 +247,7 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
             <Icon id="pause"/>
           </button>
         ) : (
-        <button className="btn icon-btn" onClick={hideImage} title="Close">
+        <button className="btn icon-btn" onClick={close} title="Close">
           <Icon id="close"/>
         </button>
         )}

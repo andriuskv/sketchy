@@ -80,8 +80,8 @@ export default function Session({ session, close }: Props) {
     });
     initWorker({ id: "grace", action: "start", duration: manual ? PAUSE_DURATION : session.grace });
     pip.updateImage({
-      index: state.index,
-      url: fileService.preloadImage(session.images[state.index])
+      index: nextIndex,
+      url: fileService.preloadImage(session.images[nextIndex])
     }, session.images.length);
     pip.updateGraceView(manual ? PAUSE_DURATION : session.grace, manual ? "Skipping" : "Loading", false);
     pip.toggleGraceView(true);
