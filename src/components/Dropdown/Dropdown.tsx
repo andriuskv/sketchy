@@ -36,8 +36,15 @@ type State = {
   } | null;
 }
 
+function getParentElement(element: HTMLElement | null) {
+  while (element && !element.hasAttribute("data-dropdown-parent")) {
+    element = element.parentElement;
+  }
+  return element || document.body;
+}
+
 export default function Dropdown({ container, toggle = {}, body, usePortal, children }: Props) {
-  const [state, setState] = useState<State>({ id: getRandomString(), visible: false });
+  const [state, setState] = useState<State>(() => ({ id: getRandomString(), visible: false }));
   const isMounted = useRef(false);
   const drop = useRef<HTMLDivElement>(null);
   const toggleBtn = useRef<HTMLButtonElement>(null);
@@ -147,13 +154,6 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
     }
   }
 
-  function getParentElement(element: HTMLElement | null) {
-    while (element && !element.hasAttribute("data-dropdown-parent")) {
-      element = element.parentElement;
-    }
-    return element;
-  }
-
   return (
     <div id={state.id} className={`dropdown-container${container ? ` ${container.className}` : ""}${state.visible ? " visible" : ""}`}>
       <ToggleBtn params={toggle} toggleDropdown={toggleDropdown} ref={toggleBtn} visible={state.visible}/>
@@ -167,4 +167,4 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
       )}
     </div>
   );
-}
+};

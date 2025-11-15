@@ -136,7 +136,7 @@ function App() {
     return <Session session={session} close={closeSession}/>;
   }
   return (
-    <div className="images-view" onDrop={handleDrop} data-dropdown-parent>
+    <div className="images-view" onDrop={handleDrop}>
       {uploading ? (
         <div className="upload-status-indicator">
           <Icon id="spinner"/>
