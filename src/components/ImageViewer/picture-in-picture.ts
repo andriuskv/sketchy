@@ -281,7 +281,6 @@ function updateImage(image: { url: string, index: number }, count: number) {
   if (!pipWindow) {
     return;
   }
-
   const element = pipWindow.document.querySelector(".viewer-image") as HTMLImageElement;
   element.src = image.url;
 
