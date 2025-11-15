@@ -134,7 +134,7 @@ export default function Session({ session, close }: Props) {
       if (key === "ArrowRight") {
         skip(true);
       }
-      else if (key === "Escape" ) {
+      else if (key === "Escape" || key === " ") {
         pause();
       }
     }
