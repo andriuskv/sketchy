@@ -23,7 +23,7 @@ function getDefaultSession(): FormSession {
   return {
     title: "Default",
     id: getRandomString(4),
-    count: 20,
+    count: 10,
     randomize: true,
     duration: 120,
     grace: 5,
