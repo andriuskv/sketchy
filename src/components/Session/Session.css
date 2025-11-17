@@ -20,12 +20,16 @@
 }
 
 .session-grace {
+  z-index: 1;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: var(--space-xl);
   height: 100%;
+  background-color: light-dark(var(--color-white), var(--color-grey-50));
 
   .btn.hidden {
     opacity: 0;
@@ -38,10 +42,15 @@
 }
 
 .session-paused {
+  z-index: 1;
+  position: absolute;
+  inset: 0;
   display: grid;
   justify-content: center;
   align-items: center;
   height: 100%;
+  background-color: light-dark(var(--color-white-60), var(--color-grey-90-50));
+  backdrop-filter: blur(16px) grayscale(100%);
 }
 
 .session-paused-title {

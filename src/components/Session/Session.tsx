@@ -14,7 +14,6 @@ type Props = {
 type StateText = "Starting" | "Continuing" | "Skipping" | "Loading";
 
 type State = {
-  loading: boolean,
   grace: number,
   stateText: StateText,
   stateId: number
@@ -31,7 +30,6 @@ const LOADING = 3;
 
 export default function Session({ session, close }: Props) {
   const [state, setState] = useState<State>({
-    loading: true,
     grace: PAUSE_DURATION,
     stateText: "Starting",
     stateId: STARTING,
@@ -40,7 +38,7 @@ export default function Session({ session, close }: Props) {
     index: 0
   });
   const [sessionEnded, setSessionEnded] = useState(false);
-  const { initWorker, destroyWorkers } = useWorker(handleMessage, [state.index, state.loading, state.paused]);
+  const { initWorker, destroyWorkers } = useWorker(handleMessage, [state.index, state.paused, state.grace === -1]);
 
   useEffect(() => {
     initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION });
@@ -59,7 +57,7 @@ export default function Session({ session, close }: Props) {
   }
 
   function skip(manual = false) {
-    if (state.loading || state.paused) {
+    if (state.grace > -1 || state.paused) {
       return;
     }
     const nextIndex = state.index + 1;
@@ -72,7 +70,6 @@ export default function Session({ session, close }: Props) {
     setState({
       ...state,
       grace: manual ? PAUSE_DURATION : session.grace,
-      loading: true,
       stateText: manual ? "Skipping" : "Loading",
       stateId: manual ? SKIPPING : LOADING,
       duration: session.duration,
@@ -89,7 +86,7 @@ export default function Session({ session, close }: Props) {
   }
 
   function pause() {
-    if (state.loading) {
+    if (state.grace > -1 && !state.paused) {
       return;
     }
     const paused = !state.paused;
@@ -98,7 +95,7 @@ export default function Session({ session, close }: Props) {
 
     if (paused) {
       pip.handlePipPause(paused);
-      setState({ ...state, paused, duration: state.duration, grace: session.grace  });
+      setState({ ...state, paused, grace: PAUSE_DURATION  });
     }
     else {
       pip.updateGraceView(PAUSE_DURATION, "Continuing", false);
@@ -106,9 +103,6 @@ export default function Session({ session, close }: Props) {
       setState({
         ...state,
         paused,
-        loading: true,
-        duration: state.duration,
-        grace: PAUSE_DURATION,
         stateText: "Continuing",
         stateId: CONTINUING
       });
@@ -120,9 +114,9 @@ export default function Session({ session, close }: Props) {
     destroyWorkers();
     setState({
       ...state,
-      grace: -1,
-      loading: false
+      grace: -1
     });
+    initWorker({ id: "duration", action: "start", duration: session.duration });
   }
 
   useEffect(() => {
@@ -159,11 +153,13 @@ export default function Session({ session, close }: Props) {
     if (event.data.id === "grace") {
       if (event.data.duration < 0) {
         pip.handlePipPause(false);
+        console.log(event.data.duration);
         setState({
           ...state,
           paused: false,
-          grace: event.data.duration,
+          grace: -1
         });
+        initWorker({ id: "duration", action: "start", duration: state.duration });
       }
       else {
         pip.updateGraceView(event.data.duration, state.stateText, state.grace < session.grace - PAUSE_DURATION);
@@ -175,15 +171,10 @@ export default function Session({ session, close }: Props) {
         skip();
       }
       else {
-        setState({ ...state, duration: event.data.duration });
+        setState({ ...state, grace: -1, duration: event.data.duration });
         pip.updateProgressBar(1 - (event.data.duration / session.duration));
       }
     }
-  }
-
-  function handleImageLoad() {
-    setState({ ...state, loading: false });
-    initWorker({ id: "duration", action: "start", duration: state.duration });
   }
 
   if (sessionEnded) {
@@ -199,31 +190,24 @@ export default function Session({ session, close }: Props) {
             <button className="btn text-btn" onClick={() => endSession()}>Quit</button>
           </div>
         </div>
-      ) : (
-        <>
-          {state.loading ? null : (
-            <div className="session-bar-progress-container">
-              <div className="session-bar-progress-bar" style={{ scale: `${1 - (state.duration / session.duration)} 1` }}></div>
+      ) : state.grace > -1 ? (
+        <div className="session-grace">
+          <div className="session-grace-text">{state.stateText}</div>
+          <div className="session-grace-value">{state.grace}</div>
+          {state.stateId === LOADING && session.grace >= 10 ? (
+            <div className="session-grace-btns">
+              <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`}
+                onClick={skipWaiting}>Skip Waiting</button>
+              <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`}
+                onClick={() => endSession()}>Quit</button>
             </div>
-          )}
-          {state.grace > -1 ? (
-            <div className="session-grace">
-              <div className="session-grace-text">{state.stateText}</div>
-              <div className="session-grace-value">{state.grace}</div>
-              {state.stateId === LOADING && session.grace >= 10 ? (
-                <div className="session-grace-btns">
-                  <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`}
-                    onClick={skipWaiting}>Skip Waiting</button>
-                  <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`}
-                    onClick={() => endSession()}>Quit</button>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <ImageViewer images={session.images} index={state.index} inSession pause={pause} skip={skip} onImageReady={handleImageLoad} close={endSession}/>
-          )}
-        </>
-      )}
+          ) : null}
+        </div>
+      ) : null}
+      <div className="session-bar-progress-container">
+        <div className="session-bar-progress-bar" style={{ scale: `${1 - (state.duration / session.duration)} 1` }}></div>
+      </div>
+      <ImageViewer images={session.images} index={state.index} inSession pause={pause} skip={skip} close={endSession} hideControls={state.paused || state.grace > -1}/>
     </div>
   );
 }

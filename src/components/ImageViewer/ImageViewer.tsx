@@ -9,6 +9,7 @@ type Props = {
   index: number,
   overlay?: boolean,
   inSession?: boolean,
+  hideControls?: boolean,
   pause?: () => void,
   skip?: (manual?: boolean) => void,
   onImageReady?: (event: SyntheticEvent) => void,
@@ -20,40 +21,42 @@ type StateImage = {
   url: string
 }
 
-export default function ImageViewer({ images, index, overlay, inSession, pause, skip, onImageReady, close }: Props) {
-  const [image, setImage] = useState<StateImage>(() => ({
-      index,
-      url: fileService.preloadImage(images[index])
-  }));
+function getImage(index: number, images: Image[]) {
+  return {
+    index,
+    url: fileService.preloadImage(images[index])
+  };
+}
+
+export default function ImageViewer({ images, index, overlay, inSession, hideControls, pause, skip, onImageReady, close }: Props) {
+  const [image, setImage] = useState<StateImage>(() => getImage(index, images));
   const pointerPosStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
   const initialScale = useRef(1);
   const root = useRef(document.documentElement);
 
+  useEffect(() => {
+    setImage(getImage(index, images));
+  }, [index]);
+
   function nextImage() {
     const nextIndex = image.index + 1;
     const index = nextIndex === images.length ? 0 : nextIndex;
 
-    setImage({
-      index: index,
-      url: fileService.preloadImage(images[index])
-    });
+    setImage(getImage(index, images));
   }
 
   function prevImage() {
-    const prevIndex = image.index - 1;
+    const index = image.index - 1;
 
-    if (prevIndex === -1) {
+    if (index === -1) {
       setImage({
         index: images.length - 1,
         url: fileService.preloadImage(images[images.length - 1])
       });
       return;
     }
-    setImage({
-      index: prevIndex,
-      url: fileService.preloadImage(images[prevIndex])
-    });
+    setImage(getImage(index, images));
   }
 
   function zoomIn() {
@@ -204,8 +207,16 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
       scale = viewHeight / height;
     }
     initialScale.current = scale;
+
+    target.parentElement!.classList.add("animate");
+    target.parentElement!.style.setProperty("--x", "50%");
+    target.parentElement!.style.setProperty("--y", "50%");
     target.style.setProperty("--scale", scale.toString());
     target.style.setProperty("--dir", "1");
+
+    setTimeout(() => {
+      target.parentElement!.classList.remove("animate");
+    }, 200);
 
     if (onImageReady) {
       onImageReady(event);
@@ -227,50 +238,54 @@ export default function ImageViewer({ images, index, overlay, inSession, pause, 
 
   return (
     <div className={`viewer${overlay ? " overlay" : ""}`} onPointerDown={handlePointerDown}>
-      <div className="viewer-bar viewer-top-bar">
-        {inSession && pip.isSupported() ? (
-          <button className="btn icon-btn" onClick={togglePip} title="Picture-in-picture">
-            <Icon id="pip"/>
+      {hideControls ? null : (
+        <div className="viewer-bar viewer-top-bar">
+          {inSession && pip.isSupported() ? (
+            <button className="btn icon-btn" onClick={togglePip} title="Picture-in-picture">
+              <Icon id="pip"/>
+            </button>
+          ) : null}
+          <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
+            <Icon id="image-full"/>
           </button>
-        ) : null}
-        <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
-          <Icon id="image-full"/>
-        </button>
-        <button className="btn icon-btn" onClick={mirrorImage} title="Mirror horizontally">
-          <Icon id="flip-horizontal"/>
-        </button>
-        <button className="btn icon-btn" onClick={resetImage} title="Reset">
-          <Icon id="reset"/>
-        </button>
-        {inSession ? (
-          <button className="btn icon-btn" onClick={pause} title="pause">
-            <Icon id="pause"/>
+          <button className="btn icon-btn" onClick={mirrorImage} title="Mirror horizontally">
+            <Icon id="flip-horizontal"/>
           </button>
-        ) : (
-        <button className="btn icon-btn" onClick={close} title="Close">
-          <Icon id="close"/>
-        </button>
-        )}
-      </div>
+          <button className="btn icon-btn" onClick={resetImage} title="Reset">
+            <Icon id="reset"/>
+          </button>
+          {inSession ? (
+            <button className="btn icon-btn" onClick={pause} title="pause">
+              <Icon id="pause"/>
+            </button>
+          ) : (
+          <button className="btn icon-btn" onClick={close} title="Close">
+            <Icon id="close"/>
+          </button>
+          )}
+        </div>
+      )}
       <div className="viewer-image-container">
         <img src={image.url} className="viewer-image" onLoad={handleImageLoad} draggable="false" ref={imageRef}/>
       </div>
-      <div className="viewer-bar viewer-bottom-bar">
-        {inSession ? null : <span className="viewer-bar-item-info text-overflow">{images[image.index].name}</span>}
-        <span className="viewer-bar-item-info">{image.index + 1} / {images.length}</span>
-        {inSession && skip ? (
-          <button className="btn text-btn" onClick={() => skip(true)}>Skip</button>
-        ): (
-          <>
-            <button className="btn icon-btn" onClick={prevImage} title="Previous">
-              <Icon id="chevron-left"/>
-            </button>
-            <button className="btn icon-btn" onClick={nextImage} title="Next">
-              <Icon id="chevron-right"/>
-            </button>
-          </>
-        )}
-      </div>
+      {hideControls ? null : (
+        <div className="viewer-bar viewer-bottom-bar">
+          {inSession ? null : <span className="viewer-bar-item-info text-overflow">{images[image.index].name}</span>}
+          <span className="viewer-bar-item-info">{image.index + 1} / {images.length}</span>
+          {inSession && skip ? (
+            <button className="btn text-btn" onClick={() => skip(true)}>Skip</button>
+          ): (
+            <>
+              <button className="btn icon-btn" onClick={prevImage} title="Previous">
+                <Icon id="chevron-left"/>
+              </button>
+              <button className="btn icon-btn" onClick={nextImage} title="Next">
+                <Icon id="chevron-right"/>
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
