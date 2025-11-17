@@ -69,6 +69,7 @@
   justify-content: flex-start;
   padding: var(--space-md);
   border-radius: 0;
+  color: var(--color-white-60);
 
   &:hover {
     border-left-color: transparent;
@@ -76,19 +77,13 @@
   }
 
   &:focus-visible {
-    box-shadow:
-      inset var(--focus-shadow),
-      var(--fg-shadow);
+    border-color: var(--color-primary);
+    box-shadow: none;
   }
 
   &.active {
-    box-shadow: inset 2px 0 0 0 var(--color-primary);
-
-    &:focus-visible {
-      box-shadow:
-        inset 4px 0 0 0 var(--color-primary),
-        inset var(--focus-shadow);
-    }
+    border-left: 2px solid var(--color-primary);
+    color: var(--color-white-80);
   }
 
   &.icon-placeholder {

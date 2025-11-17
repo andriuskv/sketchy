@@ -36,6 +36,16 @@
     .viewer-bar {
       background-color: var(--color-black-8);
     }
+
+    .viewer-image-container {
+      &.animate {
+        transition: left 0.1s, top 0.1s;
+
+        .viewer-image {
+          transition: transform 0.1s;
+        }
+      }
+    }
   }
 }
 
