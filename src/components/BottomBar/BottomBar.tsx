@@ -39,6 +39,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
   });
   const modalRef = useRef<HTMLDialogElement>(null);
   const activeSession = sessions.find(sessions => sessions.active) || sessions[0];
+  const [modal, setModal] = useState<{ id: string } | null>(null);
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const target = event.target;
@@ -52,6 +53,17 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
 
     setSessions(newSessions);
     saveSessions(newSessions);
+  }
+
+  function enableSessionTitleEdit(id: string) {
+    showModal();
+
+    const inputElement = document.querySelector(".session-form .input") as HTMLInputElement | null;
+
+    if (inputElement) {
+      inputElement.value = sessions.find(session => session.id === id)!.title;
+    }
+    setModal({ id })
   }
 
   function selectTimerWithState(id: string) {
@@ -112,6 +124,31 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
     closeModal();
   }
 
+  function editSesison(event: FormEvent) {
+    event.preventDefault();
+
+    interface FormElements extends HTMLFormControlsCollection {
+      title: HTMLInputElement;
+    }
+
+    const formElement = event.target as HTMLFormElement;
+    const elements = formElement.elements as FormElements;
+
+    const { title } = elements;
+    const value = title.value.trim();
+    const index = sessions.findIndex(session => session.id === modal!.id);
+
+    const newSessions = sessions.with(index, {
+      ...sessions[index],
+      title: value
+    });
+
+    formElement.reset();
+    setSessions(newSessions);
+    saveSessions(newSessions);
+    closeModal();
+  }
+
   function saveSessions(sessions: FormSession[]) {
     localStorage.setItem("sessions", JSON.stringify(sessions));
   }
@@ -126,6 +163,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
     if (modalRef.current) {
       modalRef.current.close();
     }
+    setModal(null);
   }
 
   return (
@@ -136,6 +174,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
             <h3 className="bottom-bar-title">Preferences</h3>
             <SessionSelection
               activeSession={activeSession} sessions={sessions}
+              enableSessionTitleEdit={enableSessionTitleEdit}
               selectTimerWithState={selectTimerWithState} removeSession={removeSession} showModal={showModal}>
             </SessionSelection>
           </div>
@@ -174,7 +213,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
           {selected === imageCount ? null : <button type="button" className="btn text-btn" onClick={resetSelected}>Reset</button>}
         </div>
       </form>
-      <NewSessionModal addSession={addSession} closeModal={closeModal} ref={modalRef}/>
+      <NewSessionModal modal={modal} addSession={addSession} editSesison={editSesison} closeModal={closeModal} ref={modalRef}/>
     </>
   );
 }

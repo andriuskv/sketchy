@@ -66,7 +66,7 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
         shouldHide = false;
       }
       else {
-        shouldHide = !!(element.closest("a") || element.closest(".dropdown-btn") || element.closest("[data-dropdown-close]"));
+        shouldHide = !!(element.closest("a") || element.closest(".dropdown-btn") || element.closest("[data-dropdown-btn]") || element.closest("[data-dropdown-close]"));
       }
     }
     else if (usePortal) {
