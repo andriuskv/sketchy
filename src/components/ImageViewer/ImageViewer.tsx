@@ -8,6 +8,7 @@ type Props = {
   images: Image[],
   index: number,
   overlay?: boolean,
+  randomizeFlip?: boolean,
   inSession?: boolean,
   hideControls?: boolean,
   pause?: () => void,
@@ -28,7 +29,7 @@ function getImage(index: number, images: Image[]) {
   };
 }
 
-export default function ImageViewer({ images, index, overlay, inSession, hideControls, pause, skip, onImageReady, close }: Props) {
+export default function ImageViewer({ images, index, overlay, randomizeFlip, inSession, hideControls, pause, skip, onImageReady, close }: Props) {
   const [image, setImage] = useState<StateImage>(() => getImage(index, images));
   const pointerPosStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
@@ -212,7 +213,7 @@ export default function ImageViewer({ images, index, overlay, inSession, hideCon
     target.parentElement!.style.setProperty("--x", "50%");
     target.parentElement!.style.setProperty("--y", "50%");
     target.style.setProperty("--scale", scale.toString());
-    target.style.setProperty("--dir", "1");
+    target.style.setProperty("--dir", randomizeFlip ? (Math.random() < 0.5 ? "1" : "-1") : "1");
 
     setTimeout(() => {
       target.parentElement!.classList.remove("animate");

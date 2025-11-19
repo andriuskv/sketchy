@@ -25,6 +25,7 @@ function getDefaultSession(): FormSession {
     id: getRandomString(4),
     count: 10,
     randomize: true,
+    randomizeFlip: false,
     duration: 120,
     grace: 5,
     active: false
@@ -192,6 +193,13 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
           <label className="bottom-bar-form-label">
             <span className="label-left">Duration</span>
             <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.duration} onChange={handleInputChange}  name="duration"/>
+          </label>
+          <label className="checkbox-container bottom-bar-form-label">
+            <span className="label-left">Randomize flip</span>
+            <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomizeFlip} onChange={handleInputChange} name="randomizeFlip"/>
+            <div className="checkbox">
+              <div className="checkbox-tick"></div>
+            </div>
           </label>
           <label className="bottom-bar-form-label">
             <span className="label-left">Grace period</span>
