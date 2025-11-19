@@ -1,0 +1,24 @@
+.dropdown-btn-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  &:hover .icon-btn {
+    opacity: 1;
+  }
+
+  .text-btn {
+    flex-grow: 1;
+  }
+
+  .icon-btn {
+    position: absolute;
+    right: var(--space-xs);
+    opacity: 0;
+    transition: opacity 0.2s;
+
+    &:focus-visible {
+      opacity: 1;
+    }
+  }
+}

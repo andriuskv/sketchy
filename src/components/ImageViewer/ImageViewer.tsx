@@ -147,7 +147,7 @@ export default function ImageViewer({ images, index, overlay, inSession, hideCon
   function handlePointerDown(event: ReactPointerEvent) {
     const imageElement = imageRef.current;
 
-    if (!imageElement || event.button !== 0) {
+    if (!imageElement || event.button !== 0 || event.target.closest(".viewer-bar")) {
       return;
     }
     const containerElement = imageElement.parentElement!;
