@@ -10,6 +10,7 @@ type Image = {
 type Prefs = {
   count: number,
   randomize: boolean,
+  randomizeFlip: boolean,
   duration: number,
   grace: number
 };

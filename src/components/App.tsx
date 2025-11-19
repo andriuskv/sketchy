@@ -67,6 +67,7 @@ function App() {
     interface FormElements extends HTMLFormControlsCollection {
       count: HTMLInputElement;
       randomize: HTMLInputElement;
+      randomizeFlip: HTMLInputElement;
       duration: HTMLInputElement;
       grace: HTMLInputElement;
     }
@@ -74,7 +75,7 @@ function App() {
     const formElement = event.target as HTMLFormElement;
     const elements = formElement.elements as FormElements;
 
-    const { count, randomize, duration, grace } = elements;
+    const { count, randomize, randomizeFlip, duration, grace } = elements;
     const seletedImages = images.filter(image => image.selected);
     const sessionImages =  randomize.checked ?
       shuffleArray(seletedImages).slice(0, parseInt(count.value, 10)) :
@@ -86,6 +87,7 @@ function App() {
     const preferences = {
       count: parseInt(count.value, 10),
       randomize: randomize.checked,
+      randomizeFlip: randomizeFlip.checked,
       duration: parseInt(duration.value, 10),
       grace: parseInt(grace.value, 10),
     };
