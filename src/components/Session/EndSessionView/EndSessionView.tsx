@@ -26,7 +26,7 @@ export default function EndSessionView({ images, close }: Props) {
 
   return (
     <>
-      {image ? <ImageViewer images={images} index={image.index} overlay close={hideImage}/> : null}
+      {image ? <ImageViewer images={images} index={image.index} close={hideImage}/> : null}
       <div className="end-session-image-view">
         <div className="container">
           <button className="btn icon-text-btn session-close-btn" onClick={close}>

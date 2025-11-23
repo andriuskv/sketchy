@@ -153,7 +153,6 @@ export default function Session({ session, close }: Props) {
     if (event.data.id === "grace") {
       if (event.data.duration < 0) {
         pip.handlePipPause(false);
-        console.log(event.data.duration);
         setState({
           ...state,
           paused: false,

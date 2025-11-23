@@ -30,7 +30,8 @@ export default [
       "@typescript-eslint/ban-ts-comment": 0,
       "@typescript-eslint/no-explicit-any": 0,
       "react/react-in-jsx-scope": 0,
-      "react-hooks/exhaustive-deps": 0
+      "react-hooks/exhaustive-deps": 0,
+      "react-hooks/set-state-in-effect": 0
     }
   }
 ];
