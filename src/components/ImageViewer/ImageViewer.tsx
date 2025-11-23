@@ -7,7 +7,6 @@ import * as pip from "./picture-in-picture"
 type Props = {
   images: Image[],
   index: number,
-  overlay?: boolean,
   randomizeFlip?: boolean,
   inSession?: boolean,
   hideControls?: boolean,
@@ -29,7 +28,8 @@ function getImage(index: number, images: Image[]) {
   };
 }
 
-export default function ImageViewer({ images, index, overlay, randomizeFlip, inSession, hideControls, pause, skip, onImageReady, close }: Props) {
+
+export default function ImageViewer({ images, index, randomizeFlip, inSession, hideControls, pause, skip, onImageReady, close }: Props) {
   const [image, setImage] = useState<StateImage>(() => getImage(index, images));
   const pointerPosStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
@@ -48,15 +48,9 @@ export default function ImageViewer({ images, index, overlay, randomizeFlip, inS
   }
 
   function prevImage() {
-    const index = image.index - 1;
+    const nextIndex = image.index - 1;
+    const index = nextIndex < 0 ? images.length - 1 :nextIndex;
 
-    if (index === -1) {
-      setImage({
-        index: images.length - 1,
-        url: fileService.preloadImage(images[images.length - 1])
-      });
-      return;
-    }
     setImage(getImage(index, images));
   }
 
@@ -151,8 +145,7 @@ export default function ImageViewer({ images, index, overlay, randomizeFlip, inS
     if (!imageElement || event.button !== 0 || (event.target as Element | null)?.closest(".viewer-bar")) {
       return;
     }
-    const containerElement = imageElement.parentElement!;
-    const rect = containerElement.getBoundingClientRect();
+    const rect = imageElement.getBoundingClientRect();
     const translateAmount = 0.5;
     const x = event.clientX - rect.left - (rect.width * translateAmount);
     const y = event.clientY - rect.top - (rect.height * translateAmount);
@@ -167,14 +160,12 @@ export default function ImageViewer({ images, index, overlay, randomizeFlip, inS
 
   function handlePointerMove(event: PointerEvent) {
     const target = document.querySelector(".viewer-image-container") as HTMLImageElement;
-    const viewWidth = document.documentElement.clientWidth;
-    const viewHeight = document.documentElement.clientHeight;
     const { clientX, clientY } = event;
-    const x = ((clientX - pointerPosStart.current.x) / viewWidth) * 100;
-    const y = ((clientY - pointerPosStart.current.y) / viewHeight) * 100;
+    const x = clientX - pointerPosStart.current.x;
+    const y = clientY - pointerPosStart.current.y;
 
-    target.style.setProperty("--x", `${x}%`);
-    target.style.setProperty("--y", `${y}%`);
+    target.style.setProperty("--x", `${x}px`);
+    target.style.setProperty("--y", `${y}px`);
   }
 
   function handlePointerUp() {
@@ -186,38 +177,32 @@ export default function ImageViewer({ images, index, overlay, randomizeFlip, inS
   function handleImageLoad(event: SyntheticEvent) {
     const target = event.target as HTMLImageElement;
     const { width, height } = target;
-    const viewWidth = document.documentElement.clientWidth;
-    const viewHeight = document.documentElement.clientHeight;
+    const { clientWidth, clientHeight } = document.documentElement;
     let scale = 1;
 
     if (width > height) {
-      scale = viewWidth / width;
+      scale = clientWidth / width;
 
-      if (scale * height >= viewHeight) {
-        scale = viewHeight / height;
+      if (scale * height >= clientHeight) {
+        scale = clientHeight / height;
       }
     }
-    else if (height >= viewHeight) {
-      scale = viewHeight / height;
+    else if (height >= clientHeight) {
+      scale = clientHeight / height;
 
-      if (scale * width >= viewWidth) {
-        scale = viewWidth / width;
+      if (scale * width >= clientWidth) {
+        scale = clientWidth / width;
       }
     }
     else {
-      scale = viewHeight / height;
+      scale = clientHeight / height;
     }
     initialScale.current = scale;
 
-    target.parentElement!.classList.add("animate");
     target.parentElement!.style.setProperty("--x", "50%");
     target.parentElement!.style.setProperty("--y", "50%");
     target.style.setProperty("--scale", scale.toString());
     target.style.setProperty("--dir", randomizeFlip ? (Math.random() < 0.5 ? "1" : "-1") : "1");
-
-    setTimeout(() => {
-      target.parentElement!.classList.remove("animate");
-    }, 200);
 
     if (onImageReady) {
       onImageReady(event);
@@ -238,7 +223,7 @@ export default function ImageViewer({ images, index, overlay, randomizeFlip, inS
   }
 
   return (
-    <div className={`viewer${overlay ? " overlay" : ""}`} onPointerDown={handlePointerDown}>
+    <div className={`viewer${inSession ? "" : " overlay"}`} onPointerDown={handlePointerDown}>
       {hideControls ? null : (
         <div className="viewer-bar viewer-top-bar">
           {inSession && pip.isSupported() ? (
