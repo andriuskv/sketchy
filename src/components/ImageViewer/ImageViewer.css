@@ -95,8 +95,10 @@
 .viewer-image {
   --dir: 1;
   --scale: 1;
+  --rotation: 0;
 
   user-select: none;
+  rotate: calc(var(--rotation) * 1deg);
   scale: calc(var(--dir) * var(--scale)) var(--scale);
   width: auto;
   max-width: none;
