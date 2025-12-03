@@ -104,6 +104,7 @@ function App() {
 
   function closeSession() {
     filesService.cleanupPreloadedImages();
+    filesService.resetImageDimensions();
     setSession(null);
   }
 

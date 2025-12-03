@@ -3,6 +3,7 @@ import * as fileService from "services/files";
 import Icon from "components/Icon/Icon";
 import "./ImageViewer.css";
 import * as pip from "./picture-in-picture"
+import Toast from "./Toast/Toast";
 
 type Props = {
   images: Image[],
@@ -34,6 +35,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
   const imageRef = useRef<HTMLImageElement>(null);
   const initialScale = useRef(1);
   const root = useRef(document.documentElement);
+  const [copyMessage, setCopyMessage] = useState("");
 
   useEffect(() => {
     setImage(getImage(index, images));
@@ -183,7 +185,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
 
   function handleImageLoad(event: SyntheticEvent) {
     const target = event.target as HTMLImageElement;
-    const { width, height } = target;
+    const { width, height, naturalWidth, naturalHeight } = target;
     const { clientWidth, clientHeight } = document.documentElement;
     let scale = 1;
 
@@ -210,7 +212,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     target.parentElement!.style.setProperty("--y", "50%");
     target.style.setProperty("--scale", scale.toString());
     target.style.setProperty("--dir", randomizeFlip ? (Math.random() < 0.5 ? "1" : "-1") : "1");
-    target.style.setProperty("--rotation", "0");
+    fileService.setImageDimensions(images[image.index].name, naturalWidth, naturalHeight);
 
     if (onImageReady) {
       onImageReady(event);
@@ -230,8 +232,42 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     });
   }
 
+  async function copyImage() {
+    const file = images[image.index].file;
+    let data = null;
+
+    if (ClipboardItem.supports(file.type)) {
+      data = {
+        [file.type]: file
+      };
+      return;
+    }
+    const blob = await fileService.convertImageToPng(file.name);
+
+    if (blob) {
+      data = {
+        [blob.type]: blob
+      };
+    }
+
+    if (data) {
+      const clipboardItem = new ClipboardItem(data);
+      await window.navigator.clipboard.write([clipboardItem]);
+
+      setCopyMessage("Copied");
+    }
+    else {
+      setCopyMessage("Failed to copy");
+    }
+  }
+
+  function dismissMessage() {
+    setCopyMessage("");
+  }
+
   return (
     <div className={`viewer${inSession ? "" : " overlay"}`} onPointerDown={handlePointerDown}>
+      {copyMessage ? <Toast message={copyMessage} position="top" offset="48px" duration={500} dismiss={dismissMessage}/> : null}
       {hideControls ? null : (
         <div className="viewer-bar viewer-top-bar">
           {inSession && pip.isSupported() ? (
@@ -239,6 +275,9 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
               <Icon id="pip"/>
             </button>
           ) : null}
+          <button className="btn icon-btn" onClick={copyImage} title="Copy image">
+            <Icon id="copy"/>
+          </button>
           <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
             <Icon id="image-full"/>
           </button>
