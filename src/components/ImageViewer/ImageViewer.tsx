@@ -50,13 +50,13 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
 
   function prevImage() {
     const nextIndex = image.index - 1;
-    const index = nextIndex < 0 ? images.length - 1 :nextIndex;
+    const index = nextIndex < 0 ? images.length - 1 : nextIndex;
 
     setImage(getImage(index, images));
   }
 
   function zoomIn() {
-    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const target = imageRef.current!;
     const scale = parseFloat(target.style.getPropertyValue("--scale"));
     let nextScale = scale + scale * 0.15;
 
@@ -67,7 +67,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
   }
 
   function zoomOut() {
-    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const target = imageRef.current!;
     const scale = parseFloat(target.style.getPropertyValue("--scale"));
     let nextScale = scale - scale * 0.15;
 
@@ -119,24 +119,32 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
   }, [image]);
 
   function resetImage() {
-    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const target = imageRef.current!;
     const container = document.querySelector(".viewer-image-container") as HTMLDivElement;
 
     target.style.setProperty("--dir", "1");
+    target.style.setProperty("--rotation", "0");
     target.style.setProperty("--scale", initialScale.current.toString());
     container.style.setProperty("--x", "50%");
     container.style.setProperty("--y", "50%");
   }
 
   function mirrorImage() {
-    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const target = imageRef.current!;
     const dir = parseInt(target.style.getPropertyValue("--dir"), 10);
 
     target.style.setProperty("--dir", (dir === 1 ? -1 : 1).toString());
   }
 
+  function rotateImage() {
+    const target = imageRef.current!;
+    const rotation = parseInt(target.style.getPropertyValue("--rotation"), 10) || 0;
+
+    target.style.setProperty("--rotation", (rotation + 90).toString());
+  }
+
   function showInOriginalSize() {
-    const target = document.querySelector(".viewer-image") as HTMLImageElement;
+    const target = imageRef.current!;
     target.style.setProperty("--scale", "1");
   }
 
@@ -272,6 +280,9 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
           </button>
           <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
             <Icon id="image-full"/>
+          </button>
+          <button className="btn icon-btn" onClick={rotateImage} title="Rotate">
+            <Icon id="rotate"/>
           </button>
           <button className="btn icon-btn" onClick={mirrorImage} title="Mirror horizontally">
             <Icon id="flip-horizontal"/>
