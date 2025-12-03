@@ -8,6 +8,7 @@ let thumbs: {
 } = {};
 
 let preloaded: { [name: string]: string } = {};
+let imageDimensions: { [name: string]: { width: number, height: number } } = {};
 
 function preloadImage(image: Image) {
   if (preloaded[image.name]) {
@@ -19,6 +20,22 @@ function preloadImage(image: Image) {
   const img = new Image();
   img.src = url;
   return preloaded[image.name];
+}
+
+function getPreloadedImage(name: string) {
+  return preloaded[name];
+}
+
+function setImageDimensions(name: string, width: number, height: number) {
+  imageDimensions[name] = { width, height };
+}
+
+function getImageDimensions(name: string) {
+  return imageDimensions[name];
+}
+
+function resetImageDimensions() {
+  imageDimensions = {};
 }
 
 function cleanupPreloadedImages() {
@@ -228,6 +245,32 @@ function resetThumbs() {
   thumbs = {};
 }
 
+async function convertImageToPng(name: string): Promise<Blob | undefined | null> {
+  const url = getPreloadedImage(name);
+
+  if (!url) {
+    return undefined;
+  }
+  const img = new Image();
+
+  return new Promise(resolve => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    const { width, height } = getImageDimensions(name);
+
+    img.onload = () => {
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(blob => {
+          resolve(blob);
+      }, "image/png");
+    }
+    img.src = url;
+  })
+}
+
 async function generateThumb(image: Image) {
   if (thumbs[image.name]?.loading) {
     return;
@@ -274,6 +317,10 @@ window.addEventListener("dragover", event => {
 export {
   preloadImage,
   cleanupPreloadedImages,
+  setImageDimensions,
+  getImageDimensions,
+  resetImageDimensions,
+  convertImageToPng,
   getUniqueImages,
   sortFiles,
   readItems,
