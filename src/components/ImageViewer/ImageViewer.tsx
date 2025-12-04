@@ -240,19 +240,20 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
       data = {
         [file.type]: file
       };
-      return;
     }
-    const blob = await fileService.convertImageToPng(file.name);
+    else {
+      const blob = await fileService.convertImageToPng(file.name);
 
-    if (blob) {
-      data = {
-        [blob.type]: blob
-      };
+      if (blob) {
+        data = {
+          [blob.type]: blob
+        };
+      }
     }
 
     if (data) {
       const clipboardItem = new ClipboardItem(data);
-      await window.navigator.clipboard.write([clipboardItem]);
+      window.navigator.clipboard.write([clipboardItem]);
 
       setCopyMessage("Copied");
     }
