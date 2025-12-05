@@ -77,13 +77,61 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     target.style.setProperty("--scale", (nextScale).toString());
   }
 
+  function mirrorImage() {
+    const target = imageRef.current!;
+    const dir = parseInt(target.style.getPropertyValue("--dir"), 10);
+
+    target.style.setProperty("--dir", (dir === 1 ? -1 : 1).toString());
+  }
+
+  function rotateImage() {
+    const target = imageRef.current!;
+    const rotation = parseInt(target.style.getPropertyValue("--rotation"), 10) || 0;
+
+    target.style.setProperty("--rotation", (rotation + 90).toString());
+  }
+
+  async function copyImage() {
+    const file = images[image.index].file;
+    let data = null;
+
+    if (ClipboardItem.supports(file.type)) {
+      data = {
+        [file.type]: file
+      };
+    }
+    else {
+      const blob = await fileService.convertImageToPng(file.name);
+
+      if (blob) {
+        data = {
+          [blob.type]: blob
+        };
+      }
+    }
+
+    if (data) {
+      const clipboardItem = new ClipboardItem(data);
+      window.navigator.clipboard.write([clipboardItem]);
+
+      setCopyMessage("Copied");
+    }
+    else {
+      setCopyMessage("Failed to copy");
+    }
+  }
+
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
     const { key } = event;
 
-    if (key === "ArrowLeft") {
+    if (key === "ArrowLeft" && !inSession) {
       prevImage();
     }
     else if (key === "ArrowRight") {
+      if (inSession) {
+        skip!(true);
+        return;
+      }
       nextImage();
     }
     else if (key === "=") {
@@ -92,8 +140,21 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     else if (key === "-") {
       zoomOut();
     }
-    else if (key === "Escape" ) {
+    else if (key === "Escape" && !inSession) {
       close();
+    }
+    else if (key === "Escape" || key === " " && inSession) {
+      pause!();
+    }
+    else if (key === "r") {
+      rotateImage();
+    }
+    else if (key === "m") {
+      mirrorImage();
+    }
+    else if (key === "c" && event.ctrlKey) {
+      event.preventDefault();
+      copyImage();
     }
   });
   const onWheel = useEffectEvent((event: WheelEvent) => {
@@ -101,7 +162,6 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
 
     if (deltaY > 0) {
       zoomOut();
-
     }
     else if (deltaY < 0) {
       zoomIn();
@@ -127,20 +187,6 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     target.style.setProperty("--scale", initialScale.current.toString());
     container.style.setProperty("--x", "50%");
     container.style.setProperty("--y", "50%");
-  }
-
-  function mirrorImage() {
-    const target = imageRef.current!;
-    const dir = parseInt(target.style.getPropertyValue("--dir"), 10);
-
-    target.style.setProperty("--dir", (dir === 1 ? -1 : 1).toString());
-  }
-
-  function rotateImage() {
-    const target = imageRef.current!;
-    const rotation = parseInt(target.style.getPropertyValue("--rotation"), 10) || 0;
-
-    target.style.setProperty("--rotation", (rotation + 90).toString());
   }
 
   function showInOriginalSize() {
@@ -230,36 +276,6 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
         pause: () => pause!()
       }
     });
-  }
-
-  async function copyImage() {
-    const file = images[image.index].file;
-    let data = null;
-
-    if (ClipboardItem.supports(file.type)) {
-      data = {
-        [file.type]: file
-      };
-    }
-    else {
-      const blob = await fileService.convertImageToPng(file.name);
-
-      if (blob) {
-        data = {
-          [blob.type]: blob
-        };
-      }
-    }
-
-    if (data) {
-      const clipboardItem = new ClipboardItem(data);
-      window.navigator.clipboard.write([clipboardItem]);
-
-      setCopyMessage("Copied");
-    }
-    else {
-      setCopyMessage("Failed to copy");
-    }
   }
 
   function dismissMessage() {
