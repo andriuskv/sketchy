@@ -17,13 +17,14 @@ function isSupported() {
 }
 
 function toggle(params: Params) {
+  if (!pipSupported) {
+    return;
+  }
+
   if (pipWindow) {
     cleanup();
-    init(params);
   }
-  else {
-    init(params);
-  }
+  init(params);
 }
 
 function close(manuallyClosed?: boolean) {

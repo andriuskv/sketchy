@@ -120,27 +120,6 @@ export default function Session({ session, close }: Props) {
   }
 
   useEffect(() => {
-    function handleKeydown({ key }: KeyboardEvent) {
-      if (sessionEnded) {
-        return;
-      }
-
-      if (key === "ArrowRight") {
-        skip(true);
-      }
-      else if (key === "Escape" || key === " ") {
-        pause();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeydown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeydown);
-    };
-  }, [state, sessionEnded]);
-
-  useEffect(() => {
     pip.updateActions({
       skip: () => skip(true),
       pause: () => pause(),
