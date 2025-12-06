@@ -4,6 +4,7 @@
 }
 
 .session-bar-progress-container {
+  z-index: 3;
   position: absolute;
   top: var(--space-xs);
   left: var(--space-sm);

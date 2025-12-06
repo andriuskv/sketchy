@@ -11,6 +11,7 @@ type Props = {
   randomizeFlip?: boolean,
   inSession?: boolean,
   hideControls?: boolean,
+  paused?: boolean,
   pause?: () => void,
   skip?: (manual?: boolean) => void,
   onImageReady?: (event: SyntheticEvent) => void,
@@ -29,7 +30,7 @@ function getImage(index: number, images: Image[]) {
   };
 }
 
-export default function ImageViewer({ images, index, randomizeFlip, inSession, hideControls, pause, skip, onImageReady, close }: Props) {
+export default function ImageViewer({ images, index, randomizeFlip, inSession, hideControls, paused, pause, skip, onImageReady, close }: Props) {
   const [image, setImage] = useState<StateImage>(() => getImage(index, images));
   const pointerPosStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
@@ -124,6 +125,11 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
     const { key } = event;
 
+    if (paused && key === "Escape" || key === " " && inSession) {
+      pause!();
+      return;
+    }
+
     if (key === "ArrowLeft" && !inSession) {
       prevImage();
     }
@@ -152,13 +158,17 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     else if (key === "m") {
       mirrorImage();
     }
-    else if (key === "c" && event.ctrlKey) {
+    else if (key === "c" && event.ctrlKey && window.getSelection()?.isCollapsed) {
       event.preventDefault();
       copyImage();
     }
   });
   const onWheel = useEffectEvent((event: WheelEvent) => {
     const { deltaY } = event;
+
+    if (paused) {
+      return;
+    }
 
     if (deltaY > 0) {
       zoomOut();
@@ -176,7 +186,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("wheel", onWheel);
     };
-  }, [image]);
+  }, [paused, image]);
 
   function resetImage() {
     const target = imageRef.current!;
