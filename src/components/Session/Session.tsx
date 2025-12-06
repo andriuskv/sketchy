@@ -185,7 +185,7 @@ export default function Session({ session, close }: Props) {
       <div className="session-bar-progress-container">
         <div className="session-bar-progress-bar" style={{ scale: `${1 - (state.duration / session.duration)} 1` }}></div>
       </div>
-      <ImageViewer images={session.images} index={state.index} randomizeFlip={session.randomizeFlip} inSession pause={pause} skip={skip} close={endSession} hideControls={state.paused || state.grace > -1}/>
+      <ImageViewer images={session.images} index={state.index} randomizeFlip={session.randomizeFlip} paused={state.paused} inSession pause={pause} skip={skip} close={endSession} hideControls={state.paused || state.grace > -1}/>
     </div>
   );
 }
