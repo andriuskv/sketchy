@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import * as fileService from "services/files";
 import "./Session.css";
 import EndSessionView from "./EndSessionView/EndSessionView";
@@ -8,6 +8,7 @@ import * as pip from "../ImageViewer/picture-in-picture";
 
 type Props = {
   session: Session,
+  handleImageSelection: (event: ChangeEvent<HTMLInputElement>, name: string) => void,
   close: () => void
 }
 
@@ -28,7 +29,7 @@ const CONTINUING = 1;
 const SKIPPING = 2;
 const LOADING = 3;
 
-export default function Session({ session, close }: Props) {
+export default function Session({ session, handleImageSelection, close }: Props) {
   const [state, setState] = useState<State>({
     grace: PAUSE_DURATION,
     stateText: "Starting",
@@ -95,7 +96,7 @@ export default function Session({ session, close }: Props) {
 
     if (paused) {
       pip.handlePipPause(paused);
-      setState({ ...state, paused, grace: PAUSE_DURATION  });
+      setState({ ...state, paused, grace: PAUSE_DURATION });
     }
     else {
       pip.updateGraceView(PAUSE_DURATION, "Continuing", false);
@@ -156,7 +157,7 @@ export default function Session({ session, close }: Props) {
   }
 
   if (sessionEnded) {
-    return <EndSessionView images={session.images} close={close}/>;
+    return <EndSessionView images={session.images} handleImageSelection={handleImageSelection} close={close} />;
   }
   return (
     <div className="session">
@@ -185,7 +186,7 @@ export default function Session({ session, close }: Props) {
       <div className="session-bar-progress-container">
         <div className="session-bar-progress-bar" style={{ scale: `${1 - (state.duration / session.duration)} 1` }}></div>
       </div>
-      <ImageViewer images={session.images} index={state.index} randomizeFlip={session.randomizeFlip} paused={state.paused} inSession pause={pause} skip={skip} close={endSession} hideControls={state.paused || state.grace > -1}/>
+      <ImageViewer images={session.images} index={state.index} randomizeFlip={session.randomizeFlip} paused={state.paused} inSession pause={pause} skip={skip} close={endSession} hideControls={state.paused || state.grace > -1} />
     </div>
   );
 }

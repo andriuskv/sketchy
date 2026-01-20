@@ -16,7 +16,7 @@
   padding-block: var(--space-md);
   backface-visibility: hidden;
 
-  @media (width <= 580px) {
+  @media (width <=580px) {
     grid-template-columns: repeat(2, 1fr);
 
     .image-list-item {
@@ -66,9 +66,39 @@
 }
 
 .image-list-item-checkbox {
+  z-index: 1;
   position: absolute;
   bottom: var(--space-sm);
   right: var(--space-sm);
+  display: flex;
+  align-items: end;
+  justify-content: end;
+  width: 40px;
+  height: 40px;
+  padding: var(--space-xs);
+  cursor: pointer;
+
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 150%;
+    height: 150%;
+    background-color: var(--color-primary);
+    opacity: 0.3;
+    border-radius: 50%;
+    transform: translate(33.333%, 33.333%) scale(0);
+    transition: 0.1s transform;
+    transform-origin: bottom right;
+  }
+
+  &:hover,
+  &:has(:focus-visible) {
+    &::before {
+      transform: translate(33.333%, 33.333%) scale(1);
+    }
+  }
 
   .checkbox {
     --tick-color: var(--color-white);
@@ -94,5 +124,5 @@
   background-color: var(--color-black-16);
   font-size: var(--text-sm);
   color: var(--color-white);
-  text-shadow: 0 1px 1px var(--color-black-8),1px 2px 2px var(--color-black-4),2px 4px 4px var(--color-black-2);
+  text-shadow: 0 1px 1px var(--color-black-8), 1px 2px 2px var(--color-black-4), 2px 4px 4px var(--color-black-2);
 }
