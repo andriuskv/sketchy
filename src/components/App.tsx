@@ -6,6 +6,7 @@ import ImageList from "components/ImageList/ImageList";
 import BottomBar from "components/BottomBar/BottomBar";
 import Splash from "components/Splash/Splash";
 import Icon from "components/Icon/Icon";
+import ImageViewer from "./ImageViewer/ImageViewer";
 
 function App() {
   const [images, setImages] = useState<Image[]>([]);
@@ -13,6 +14,7 @@ function App() {
   const [sortOptions, setSortOptions] = useState({ sortBy: "default", sortOrder: 1 });
   const seletedImageCount = images.filter(image => image.selected).length;
   const [uploading, setUploading] = useState(false);
+  const [viewerImage, setViewerImage] = useState<{ index: number } | null>(null);
 
   async function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -77,7 +79,7 @@ function App() {
 
     const { count, randomize, randomizeFlip, duration, grace } = elements;
     const seletedImages = images.filter(image => image.selected);
-    const sessionImages =  randomize.checked ?
+    const sessionImages = randomize.checked ?
       shuffleArray(seletedImages).slice(0, parseInt(count.value, 10)) :
       seletedImages.slice(0, parseInt(count.value, 10));
 
@@ -117,12 +119,19 @@ function App() {
     filesService.resetThumbs();
   }
 
-  function handleImageSelection(event: ChangeEvent<HTMLInputElement>, index: number) {
+  function handleImageSelection(event: ChangeEvent<HTMLInputElement>, name: string) {
     if (!event.target) {
       return;
     }
+    const index = images.findIndex(image => image.name === name);
     const newImages = images.with(index, { ...images[index], selected: event.target.checked });
     setImages(newImages);
+
+    if (session) {
+      const sessionIndex = session.images.findIndex(image => image.name === name);
+      const newSessionImages = session.images.with(sessionIndex, { ...session.images[sessionIndex], selected: event.target.checked });
+      setSession({ ...session, images: newSessionImages });
+    }
   }
 
   function sortImages(sortBy: string, sortOrder: number = 1) {
@@ -135,22 +144,31 @@ function App() {
     setSortOptions({ sortBy, sortOrder });
   }
 
+  function hideImage() {
+    setViewerImage(null);
+  }
+
+  function viewImage(index: number) {
+    setViewerImage({ index });
+  }
+
   if (session) {
-    return <Session session={session} close={closeSession}/>;
+    return <Session session={session} close={closeSession} handleImageSelection={handleImageSelection} />;
   }
   return (
     <div className="images-view" onDrop={handleDrop}>
+      {viewerImage ? <ImageViewer images={images} index={viewerImage.index} close={hideImage} /> : null}
       {uploading ? (
         <div className="upload-status-indicator">
-          <Icon id="spinner"/>
+          <Icon id="spinner" />
           <p>Uploading...</p>
         </div>
       ) : null}
       {images.length ?
-        <ImageList images={images} handleImageSelection={handleImageSelection} sortOptions={sortOptions} sortImages={sortImages}/> :
-        <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange}/>
+        <ImageList images={images} handleImageSelection={handleImageSelection} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} /> :
+        <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
       }
-      <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImageCount} startSession={startSession} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange}/>
+      <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImageCount} startSession={startSession} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
     </div>
   );
 }
