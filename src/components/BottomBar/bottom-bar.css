@@ -34,7 +34,8 @@
 .bottom-bar-form-label {
   display: grid;
   align-items: center;
-  grid-template-columns: 128px 54px;
+  grid-template-columns: 120px 54px;
+  gap: var(--space-md);
 
   .checkbox {
     justify-self: center;
@@ -55,6 +56,14 @@
       outline: 2px solid var(--color-negative);
     }
   }
+}
+
+.bottom-bar-duration-input {
+  width: 112px;
+}
+
+.bottom-bar-duration-custom-input {
+  grid-column: 2 / 3;
 }
 
 .bottom-bar-right {

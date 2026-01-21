@@ -71,17 +71,26 @@ function App() {
       randomize: HTMLInputElement;
       randomizeFlip: HTMLInputElement;
       duration: HTMLInputElement;
+      durationSelect: HTMLSelectElement;
       grace: HTMLInputElement;
     }
 
     const formElement = event.target as HTMLFormElement;
     const elements = formElement.elements as FormElements;
 
-    const { count, randomize, randomizeFlip, duration, grace } = elements;
+    const { count, randomize, randomizeFlip, duration, durationSelect, grace } = elements;
     const seletedImages = images.filter(image => image.selected);
     const sessionImages = randomize.checked ?
       shuffleArray(seletedImages).slice(0, parseInt(count.value, 10)) :
       seletedImages.slice(0, parseInt(count.value, 10));
+    let durationValue = 0;
+
+    if (durationSelect.value === "custom") {
+      durationValue = parseInt(duration.value, 10);
+    }
+    else {
+      durationValue = parseInt(durationSelect.value, 10);
+    }
 
     if (!sessionImages.length) {
       return;
@@ -90,7 +99,7 @@ function App() {
       count: parseInt(count.value, 10),
       randomize: randomize.checked,
       randomizeFlip: randomizeFlip.checked,
-      duration: parseInt(duration.value, 10),
+      duration: durationValue,
       grace: parseInt(grace.value, 10),
     };
 
