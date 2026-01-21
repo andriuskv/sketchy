@@ -26,7 +26,7 @@ function getDefaultSession(): FormSession {
     count: 10,
     randomize: true,
     randomizeFlip: false,
-    duration: 120,
+    duration: 180,
     grace: 5,
     active: false
   };
@@ -41,6 +41,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
   const modalRef = useRef<HTMLDialogElement>(null);
   const activeSession = sessions.find(sessions => sessions.active) || sessions[0];
   const [modal, setModal] = useState<{ id: string } | null>(null);
+  const [customDuration, setCustomDuration] = useState(false);
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const target = event.target;
@@ -54,6 +55,21 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
 
     setSessions(newSessions);
     saveSessions(newSessions);
+  }
+
+  function handleSelectChange(event: ChangeEvent<HTMLSelectElement>) {
+    const value = event.target.value.trim();
+    const index = sessions.findIndex(session => session.id === activeSession.id);
+
+    if (value !== "custom") {
+      const newSessions = sessions.with(index, {
+        ...sessions[index],
+        duration: parseInt(value, 10)
+      });
+      setSessions(newSessions);
+      saveSessions(newSessions);
+    }
+    setCustomDuration(value === "custom");
   }
 
   function enableSessionTitleEdit(id: string) {
@@ -180,30 +196,46 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
             </SessionSelection>
           </div>
           <label className="bottom-bar-form-label">
-            <span className="label-left">Size</span>
-            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.count} onChange={handleInputChange} name="count"/>
+            <span>Size</span>
+            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.count} onChange={handleInputChange} name="count" />
           </label>
           <label className="checkbox-container bottom-bar-form-label">
-            <span className="label-left">Randomize</span>
-            <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomize} onChange={handleInputChange} name="randomize"/>
+            <span>Randomize</span>
+            <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomize} onChange={handleInputChange} name="randomize" />
             <div className="checkbox">
               <div className="checkbox-tick"></div>
             </div>
           </label>
           <label className="bottom-bar-form-label">
-            <span className="label-left">Duration</span>
-            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.duration} onChange={handleInputChange}  name="duration"/>
+            <span>Duration</span>
+            <div className="select-container">
+              <select className="input select bottom-bar-duration-input" onChange={handleSelectChange} value={customDuration ? "custom" : activeSession.duration} name="durationSelect">
+                <option value="30">30 sec</option>
+                <option value="60">1 min</option>
+                <option value="120">2 min</option>
+                <option value="180">3 min</option>
+                <option value="300">5 min</option>
+                <option value="600">10 min</option>
+                <option value="900">15 min</option>
+                <option value="1800">30 min</option>
+                <option value="3600">1 hour</option>
+                <option value="custom">Custom (sec)</option>
+              </select>
+            </div>
+            {customDuration && (
+              <input type="number" className="input bottom-bar-duration-input bottom-bar-duration-custom-input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.duration} onChange={handleInputChange} name="duration" />
+            )}
           </label>
           <label className="checkbox-container bottom-bar-form-label">
-            <span className="label-left">Randomize flip</span>
-            <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomizeFlip} onChange={handleInputChange} name="randomizeFlip"/>
+            <span>Randomize flip</span>
+            <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomizeFlip} onChange={handleInputChange} name="randomizeFlip" />
             <div className="checkbox">
               <div className="checkbox-tick"></div>
             </div>
           </label>
           <label className="bottom-bar-form-label">
-            <span className="label-left">Grace period</span>
-            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.grace} onChange={handleInputChange}  name="grace"/>
+            <span>Grace period</span>
+            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.grace} onChange={handleInputChange} name="grace" />
           </label>
         </div>
         <div className="bottom-bar-right">
@@ -212,16 +244,16 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
             <Dropdown>
               <button type="button" className="btn text-btn dropdown-btn" onClick={clearList}>Clear list</button>
               <FileUploadButton className="dropdown-btn" text="Upload files"
-                showFilePicker={showFilePicker} handleFileChange={handleFileChange} disabled={uploading}/>
+                showFilePicker={showFilePicker} handleFileChange={handleFileChange} disabled={uploading} />
               <FolderUploadButton className="dropdown-btn" text="Upload folder"
-                showDirPicker={showDirPicker} handleFileChange={handleFileChange} disabled={uploading}/>
+                showDirPicker={showDirPicker} handleFileChange={handleFileChange} disabled={uploading} />
             </Dropdown>
             <button type="submit" className="btn primary-btn" disabled={selected === 0}>Start</button>
           </div>
           {selected === imageCount ? null : <button type="button" className="btn text-btn" onClick={resetSelected}>Reset</button>}
         </div>
       </form>
-      <NewSessionModal modal={modal} addSession={addSession} editSesison={editSesison} closeModal={closeModal} ref={modalRef}/>
+      <NewSessionModal modal={modal} addSession={addSession} editSesison={editSesison} closeModal={closeModal} ref={modalRef} />
     </>
   );
 }
