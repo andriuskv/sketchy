@@ -8,7 +8,8 @@
   .icon-btn {
     --color: light-dark(var(--color-black-30), var(--color-white-60));
 
-    &:hover, &:focus-visible {
+    &:hover,
+    &:focus-visible {
       --color: light-dark(var(--color-black-60), var(--color-white));
       --background-color: light-dark(var(--color-black-4), var(--color-white-10));
     }
@@ -23,13 +24,15 @@
     .icon-btn {
       --color: var(--color-white-60);
 
-      &:hover, &:focus-visible {
+      &:hover,
+      &:focus-visible {
         --color: var(--color-white);
         --background-color: var(--color-white-10);
       }
     }
 
-    .viewer-bar-item-info, .toast {
+    .viewer-bar-item-info,
+    .toast {
       color: light-dark(var(--color-white-90), var(--color-white-90));
     }
 

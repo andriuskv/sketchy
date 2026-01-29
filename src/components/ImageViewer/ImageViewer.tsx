@@ -37,6 +37,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
   const initialScale = useRef(1);
   const root = useRef(document.documentElement);
   const [copyMessage, setCopyMessage] = useState("");
+  const zoomAtPos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     setImage(getImage(index, images));
@@ -56,6 +57,16 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     setImage(getImage(index, images));
   }
 
+  function getZoomAtPos(target: HTMLElement, scaleAmount: number) {
+    const rect = target.getBoundingClientRect();
+    const halfWidth = rect.width * scaleAmount / 2;
+    const halfHeight = rect.height * scaleAmount / 2;
+    const x = zoomAtPos.current.x + halfWidth - ((zoomAtPos.current.x - rect.left) * scaleAmount);
+    const y = zoomAtPos.current.y + halfHeight - ((zoomAtPos.current.y - rect.top) * scaleAmount);
+
+    return { x, y };
+  }
+
   function zoomIn() {
     const target = imageRef.current!;
     const scale = parseFloat(target.style.getPropertyValue("--scale"));
@@ -64,6 +75,11 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     if (nextScale > 16) {
       nextScale = 16;
     }
+    const { x, y } = getZoomAtPos(target, nextScale / scale);
+
+    target.parentElement!.style.setProperty("--x", (x).toString() + "px");
+    target.parentElement!.style.setProperty("--y", (y).toString() + "px");
+
     target.style.setProperty("--scale", (nextScale).toString());
   }
 
@@ -73,8 +89,13 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     let nextScale = scale - scale * 0.15;
 
     if (nextScale < 0.2) {
-      nextScale =  0.2;
+      nextScale = 0.2;
     }
+    const { x, y } = getZoomAtPos(target, nextScale / scale);
+
+    target.parentElement!.style.setProperty("--x", (x).toString() + "px");
+    target.parentElement!.style.setProperty("--y", (y).toString() + "px");
+
     target.style.setProperty("--scale", (nextScale).toString());
   }
 
@@ -292,44 +313,56 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     setCopyMessage("");
   }
 
+  function handleMousePosChange(event: ReactPointerEvent) {
+    zoomAtPos.current = { x: event.clientX, y: event.clientY };
+  }
+
+  function handlePointerLeave() {
+    const rect = imageRef.current!.getBoundingClientRect();
+    const x = rect.left + (rect.width / 2);
+    const y = rect.top + (rect.height / 2);
+
+    zoomAtPos.current = { x, y };
+  }
+
   return (
-    <div className={`viewer${inSession ? "" : " overlay"}`} onPointerDown={handlePointerDown}>
-      {copyMessage ? <Toast message={copyMessage} position="top" offset="48px" duration={500} dismiss={dismissMessage}/> : null}
+    <div className={`viewer${inSession ? "" : " overlay"}`} onPointerDown={handlePointerDown} onPointerMove={handleMousePosChange} onPointerLeave={handlePointerLeave}>
+      {copyMessage ? <Toast message={copyMessage} position="top" offset="48px" duration={500} dismiss={dismissMessage} /> : null}
       {hideControls ? null : (
         <div className="viewer-bar viewer-top-bar">
           {inSession && pip.isSupported() ? (
             <button className="btn icon-btn" onClick={togglePip} title="Picture-in-picture">
-              <Icon id="pip"/>
+              <Icon id="pip" />
             </button>
           ) : null}
           <button className="btn icon-btn" onClick={copyImage} title="Copy image">
-            <Icon id="copy"/>
+            <Icon id="copy" />
           </button>
           <button className="btn icon-btn" onClick={showInOriginalSize} title="Original size">
-            <Icon id="image-full"/>
+            <Icon id="image-full" />
           </button>
           <button className="btn icon-btn" onClick={rotateImage} title="Rotate">
-            <Icon id="rotate"/>
+            <Icon id="rotate" />
           </button>
           <button className="btn icon-btn" onClick={mirrorImage} title="Mirror horizontally">
-            <Icon id="flip-horizontal"/>
+            <Icon id="flip-horizontal" />
           </button>
           <button className="btn icon-btn" onClick={resetImage} title="Reset">
-            <Icon id="reset"/>
+            <Icon id="reset" />
           </button>
           {inSession ? (
             <button className="btn icon-btn" onClick={pause} title="pause">
-              <Icon id="pause"/>
+              <Icon id="pause" />
             </button>
           ) : (
-          <button className="btn icon-btn" onClick={close} title="Close">
-            <Icon id="close"/>
-          </button>
+            <button className="btn icon-btn" onClick={close} title="Close">
+              <Icon id="close" />
+            </button>
           )}
         </div>
       )}
       <div className="viewer-image-container">
-        <img src={image.url} className="viewer-image" onLoad={handleImageLoad} draggable="false" ref={imageRef}/>
+        <img src={image.url} className="viewer-image" onLoad={handleImageLoad} draggable="false" ref={imageRef} />
       </div>
       {hideControls ? null : (
         <div className="viewer-bar viewer-bottom-bar">
@@ -337,13 +370,13 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
           <span className="viewer-bar-item-info">{image.index + 1} / {images.length}</span>
           {inSession && skip ? (
             <button className="btn text-btn" onClick={() => skip(true)}>Skip</button>
-          ): (
+          ) : (
             <>
               <button className="btn icon-btn" onClick={prevImage} title="Previous">
-                <Icon id="chevron-left"/>
+                <Icon id="chevron-left" />
               </button>
               <button className="btn icon-btn" onClick={nextImage} title="Next">
-                <Icon id="chevron-right"/>
+                <Icon id="chevron-right" />
               </button>
             </>
           )}
