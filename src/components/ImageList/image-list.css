@@ -63,6 +63,10 @@
   object-fit: cover;
   transition: 0.1s transform;
   user-select: none;
+
+  &.mirrored {
+    transform: scale(-1, 1);
+  }
 }
 
 .image-list-item-checkbox {
