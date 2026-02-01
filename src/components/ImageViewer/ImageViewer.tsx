@@ -8,7 +8,6 @@ import Toast from "./Toast/Toast";
 type Props = {
   images: Image[],
   index: number,
-  randomizeFlip?: boolean,
   inSession?: boolean,
   hideControls?: boolean,
   paused?: boolean,
@@ -20,17 +19,19 @@ type Props = {
 
 type StateImage = {
   index: number,
+  mirrored?: boolean,
   url: string
 }
 
 function getImage(index: number, images: Image[]) {
   return {
     index,
+    mirrored: images[index].mirrored,
     url: fileService.preloadImage(images[index])
   };
 }
 
-export default function ImageViewer({ images, index, randomizeFlip, inSession, hideControls, paused, pause, skip, onImageReady, close }: Props) {
+export default function ImageViewer({ images, index, inSession, hideControls, paused, pause, skip, onImageReady, close }: Props) {
   const [image, setImage] = useState<StateImage>(() => getImage(index, images));
   const pointerPosStart = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
@@ -213,7 +214,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     const target = imageRef.current!;
     const container = document.querySelector(".viewer-image-container") as HTMLDivElement;
 
-    target.style.setProperty("--dir", "1");
+    target.style.setProperty("--dir", image.mirrored ? "-1" : "1");
     target.style.setProperty("--rotation", "0");
     target.style.setProperty("--scale", initialScale.current.toString());
     container.style.setProperty("--x", "50%");
@@ -288,7 +289,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
     target.parentElement!.style.setProperty("--x", "50%");
     target.parentElement!.style.setProperty("--y", "50%");
     target.style.setProperty("--scale", scale.toString());
-    target.style.setProperty("--dir", randomizeFlip ? (Math.random() < 0.5 ? "1" : "-1") : "1");
+    target.style.setProperty("--dir", image.mirrored ? "-1" : "1");
     fileService.setImageDimensions(images[image.index].name, naturalWidth, naturalHeight);
 
     if (onImageReady) {
@@ -366,6 +367,7 @@ export default function ImageViewer({ images, index, randomizeFlip, inSession, h
       </div>
       {hideControls ? null : (
         <div className="viewer-bar viewer-bottom-bar">
+          {image.mirrored ? <Icon id="flip-horizontal" /> : null}
           {inSession ? null : <span className="viewer-bar-item-info text-overflow">{images[image.index].name}</span>}
           <span className="viewer-bar-item-info">{image.index + 1} / {images.length}</span>
           {inSession && skip ? (

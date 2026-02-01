@@ -80,9 +80,10 @@ function App() {
 
     const { count, randomize, randomizeFlip, duration, durationSelect, grace } = elements;
     const seletedImages = images.filter(image => image.selected);
-    const sessionImages = randomize.checked ?
+    let sessionImages = randomize.checked ?
       shuffleArray(seletedImages).slice(0, parseInt(count.value, 10)) :
       seletedImages.slice(0, parseInt(count.value, 10));
+    sessionImages = sessionImages.map(image => ({ ...image, mirrored: randomizeFlip.checked ? Math.random() > 0.5 : false }));
     let durationValue = 0;
 
     if (durationSelect.value === "custom") {

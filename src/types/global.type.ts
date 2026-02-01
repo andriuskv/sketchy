@@ -4,7 +4,8 @@ type Image = {
   name: string,
   size: number,
   date: number,
-  selected: boolean
+  selected: boolean,
+  mirrored?: boolean
 };
 
 type Prefs = {

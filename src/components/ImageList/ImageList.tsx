@@ -47,7 +47,7 @@ function Item({ image, index, container, handleImageSelection, viewImage }: Item
       <li className={`image-list-item${image.selected ? " selected" : ""}`} ref={ref}>
         <button className="btn image-list-view-btn" onClick={(event) => viewImage(index, image.file, event)}>
           <div className="image-list-item-name">{image.name}</div>
-          <img src={thumb.url} className="image-list-item-image" loading="lazy" draggable="false" alt="" />
+          <img src={thumb.url} className={`image-list-item-image${image.mirrored ? " mirrored" : ""}`} loading="lazy" draggable="false" alt="" />
         </button>
         <label>
           <div className="image-list-item-checkbox">
