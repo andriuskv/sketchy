@@ -97,6 +97,7 @@ function App() {
       return;
     }
     const preferences = {
+      id: crypto.randomUUID(),
       count: parseInt(count.value, 10),
       randomize: randomize.checked,
       randomizeFlip: randomizeFlip.checked,
@@ -144,6 +145,23 @@ function App() {
     }
   }
 
+  function toggleAllImages(sessionImages: Image[], toggle: boolean) {
+    const newSessionImages: Image[] = [];
+    let newImages: Image[] = [...images];
+
+    for (const sessionImage of sessionImages) {
+      const newImage = { ...sessionImage, selected: toggle };
+      const index = newImages.findIndex(image => image.name === sessionImage.name);
+
+      if (index !== -1) {
+        newImages = newImages.with(index, newImage);
+      }
+      newSessionImages.push(newImage);
+    }
+    setImages(newImages);
+    setSession({ ...session!, images: newSessionImages });
+  }
+
   function sortImages(sortBy: string, sortOrder: number = 1) {
     if (sortBy === sortOptions.sortBy && sortOrder === sortOptions.sortOrder) {
       return;
@@ -162,8 +180,36 @@ function App() {
     setViewerImage({ index });
   }
 
+  function repeatSession(same: boolean) {
+    if (!session) {
+      return;
+    }
+    const id = crypto.randomUUID();
+
+    if (same) {
+      let images = session.images.filter(image => image.selected);
+
+      if (session.randomize) {
+        images = shuffleArray(images);
+      }
+
+      if (session.randomizeFlip) {
+        images = images.map(image => ({ ...image, mirrored: Math.random() > 0.5 }));
+      }
+      setSession({ ...session, id, repeating: true, images });
+    }
+    else {
+      const seletedImages = images.filter(image => image.selected);
+      let sessionImages = session.randomize ?
+        shuffleArray(seletedImages).slice(0, session.images.length) :
+        seletedImages.slice(0, session.images.length);
+      sessionImages = sessionImages.map(image => ({ ...image, mirrored: session.randomizeFlip ? Math.random() > 0.5 : false }));
+      setSession({ ...session, id, repeating: true, images: sessionImages });
+    }
+  }
+
   if (session) {
-    return <Session session={session} close={closeSession} handleImageSelection={handleImageSelection} />;
+    return <Session session={session} toggleAllImages={toggleAllImages} close={closeSession} handleImageSelection={handleImageSelection} repeatSession={repeatSession} />;
   }
   return (
     <div className="images-view" onDrop={handleDrop}>

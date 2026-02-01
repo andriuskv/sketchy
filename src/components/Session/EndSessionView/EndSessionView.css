@@ -8,3 +8,9 @@
   margin-top: var(--space-md);
   margin-bottom: var(--space-md);
 }
+
+.end-session-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
