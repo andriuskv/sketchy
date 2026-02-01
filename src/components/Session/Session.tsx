@@ -8,8 +8,10 @@ import * as pip from "../ImageViewer/picture-in-picture";
 
 type Props = {
   session: Session,
+  toggleAllImages: (images: Image[], toggle: boolean) => void,
   handleImageSelection: (event: ChangeEvent<HTMLInputElement>, name: string) => void,
-  close: () => void
+  close: () => void,
+  repeatSession: (same: boolean) => void
 }
 
 type StateText = "Starting" | "Continuing" | "Skipping" | "Loading";
@@ -29,7 +31,7 @@ const CONTINUING = 1;
 const SKIPPING = 2;
 const LOADING = 3;
 
-export default function Session({ session, handleImageSelection, close }: Props) {
+export default function Session({ session, toggleAllImages, handleImageSelection, close, repeatSession }: Props) {
   const [state, setState] = useState<State>({
     grace: PAUSE_DURATION,
     stateText: "Starting",
@@ -42,12 +44,23 @@ export default function Session({ session, handleImageSelection, close }: Props)
   const { initWorker, destroyWorkers } = useWorker(handleMessage, [state.index, state.paused, state.grace === -1]);
 
   useEffect(() => {
+    if (session.repeating) {
+      setState({
+        grace: PAUSE_DURATION,
+        stateText: "Starting",
+        stateId: STARTING,
+        paused: false,
+        duration: session.duration,
+        index: 0
+      });
+      setSessionEnded(false);
+    }
     initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION });
 
     return () => {
       destroyWorkers();
     };
-  }, []);
+  }, [session.id]);
 
   function endSession(fromPip = false) {
     if (!fromPip) {
@@ -157,7 +170,7 @@ export default function Session({ session, handleImageSelection, close }: Props)
   }
 
   if (sessionEnded) {
-    return <EndSessionView images={session.images} handleImageSelection={handleImageSelection} close={close} />;
+    return <EndSessionView images={session.images} toggleAllImages={toggleAllImages} handleImageSelection={handleImageSelection} repeatSession={repeatSession} close={close} />;
   }
   return (
     <div className="session">

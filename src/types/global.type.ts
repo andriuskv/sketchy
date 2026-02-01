@@ -9,6 +9,7 @@ type Image = {
 };
 
 type Prefs = {
+  id: string,
   count: number,
   randomize: boolean,
   randomizeFlip: boolean,
@@ -16,10 +17,9 @@ type Prefs = {
   grace: number
 };
 
-type Session = Prefs & { images: Image[] };
+type Session = Prefs & { images: Image[], repeating?: boolean };
 
 type FormSession = Prefs & {
-  id: string,
   active: boolean,
   title: string
 };
