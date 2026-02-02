@@ -43,6 +43,7 @@
   overflow: clip;
   content-visibility: auto;
   contain-intrinsic-size: 264px;
+  corner-shape: squircle;
 
   &:not(.selected) {
     filter: grayscale(1);
@@ -52,7 +53,7 @@
     box-shadow: var(--focus-shadow);
 
     .image-list-item-image {
-      transform: scale(1.02);
+      scale: 1.02;
     }
   }
 }
@@ -117,6 +118,19 @@
   padding: 0;
   border-radius: 0;
   border: none;
+}
+
+.image-list-item-count {
+  z-index: 1;
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  padding: var(--space-xs) 6px;
+  background-color: var(--color-black-16);
+  font-size: var(--text-sm);
+  color: var(--color-white);
+  text-shadow: 0 1px 1px var(--color-black-8), 1px 2px 2px var(--color-black-4), 2px 4px 4px var(--color-black-2);
+  border-radius: 4px;
 }
 
 .image-list-item-name {

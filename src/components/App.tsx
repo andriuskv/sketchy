@@ -77,13 +77,18 @@ function App() {
 
     const formElement = event.target as HTMLFormElement;
     const elements = formElement.elements as FormElements;
+    const imageCache = JSON.parse(localStorage.getItem("imageCache")!) || {};
 
     const { count, randomize, randomizeFlip, duration, durationSelect, grace } = elements;
     const seletedImages = images.filter(image => image.selected);
     let sessionImages = randomize.checked ?
       shuffleArray(seletedImages).slice(0, parseInt(count.value, 10)) :
       seletedImages.slice(0, parseInt(count.value, 10));
-    sessionImages = sessionImages.map(image => ({ ...image, mirrored: randomizeFlip.checked ? Math.random() > 0.5 : false }));
+    sessionImages = sessionImages.map(image => ({
+      ...image,
+      mirrored: randomizeFlip.checked ? Math.random() > 0.5 : false,
+      count: imageCache[image.name] ? imageCache[image.name] + 1 : 1
+    }));
     let durationValue = 0;
 
     if (durationSelect.value === "custom") {
@@ -112,6 +117,16 @@ function App() {
       ...preferences,
       images: sessionImages
     });
+
+    let newImages = [...images];
+
+    for (const sessionImage of sessionImages) {
+      imageCache[sessionImage.name] = sessionImage.count;
+      const index = newImages.findIndex(image => image.name === sessionImage.name);
+      newImages = newImages.with(index, { ...newImages[index], count: sessionImage.count });
+    }
+    setImages(newImages);
+    localStorage.setItem("imageCache", JSON.stringify(imageCache));
     localStorage.setItem("preferences", JSON.stringify(preferences));
   }
 
@@ -208,6 +223,11 @@ function App() {
     }
   }
 
+  function resetImageCache() {
+    localStorage.removeItem("imageCache");
+    setImages(images.map(image => ({ ...image, count: 0 })));
+  }
+
   if (session) {
     return <Session session={session} toggleAllImages={toggleAllImages} close={closeSession} handleImageSelection={handleImageSelection} repeatSession={repeatSession} />;
   }
@@ -221,7 +241,7 @@ function App() {
         </div>
       ) : null}
       {images.length ?
-        <ImageList images={images} handleImageSelection={handleImageSelection} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} /> :
+        <ImageList images={images} handleImageSelection={handleImageSelection} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} resetImageCache={resetImageCache} /> :
         <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
       }
       <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImageCount} startSession={startSession} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />

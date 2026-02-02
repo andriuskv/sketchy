@@ -4,6 +4,7 @@ type Image = {
   name: string,
   size: number,
   date: number,
+  count: number,
   selected: boolean,
   mirrored?: boolean
 };
