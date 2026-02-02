@@ -80,6 +80,19 @@ async function readItems(items: DataTransferItemList, uploadedItems: Image[] = [
   return getUniqueImages(files, uploadedItems);
 }
 
+function assignCount(images: Image[]) {
+  const imageCache = JSON.parse(localStorage.getItem("imageCache")!) || {};
+
+  for (const image of images) {
+    const count = imageCache[image.name];
+
+    if (count) {
+      image.count = count;
+    }
+  }
+  return images;
+}
+
 function getUniqueImages(files: File[], images: Image[]) {
   const newImages: Image[] = [];
   let index = images.length;
@@ -88,6 +101,7 @@ function getUniqueImages(files: File[], images: Image[]) {
     newImages.push({
       index,
       file,
+      count: 0,
       name: file.name,
       date: file.lastModified,
       size: file.size,
@@ -96,7 +110,7 @@ function getUniqueImages(files: File[], images: Image[]) {
     index += 1;
   }
 
-  return removeDuplicates(newImages, images);
+  return removeDuplicates(assignCount(newImages), images);
 }
 
 function removeDuplicates<T>(newItems: (T & { name: string })[], existingItems: Image[]): T[] {
@@ -154,17 +168,18 @@ async function showOpenFilePicker(images: Image[]) {
 
   for (const handle of handles) {
     const file = await handle.getFile();
-      files.push({
-        index,
-        file,
-        name: file.name,
-        date: file.lastModified,
-        size: file.size,
-        selected: true
-      });
-      index += 1;
+    files.push({
+      index,
+      file,
+      name: file.name,
+      date: file.lastModified,
+      size: file.size,
+      selected: true,
+      count: 0
+    });
+    index += 1;
   }
-  return removeDuplicates(files, images);
+  return removeDuplicates(assignCount(files), images);
 }
 
 async function showDirectoryPicker(images: Image[]) {
@@ -182,30 +197,34 @@ async function showDirectoryPicker(images: Image[]) {
         name: file.name,
         date: file.lastModified,
         size: file.size,
-        selected: true
+        selected: true,
+        count: 0
       });
       index += 1;
     }
   }
-  return removeDuplicates(files, images);
+  return removeDuplicates(assignCount(files), images);
 }
 
 function getSortingValue(sortBy: string, file: Image) {
-    if (sortBy === "default") {
-      return file.index;
-    }
-    if (sortBy === "date") {
-      return file.date;
-    }
-    else if (sortBy === "size") {
-      return file.size;
-    }
-    else if (sortBy === "name") {
-      // Remove special characters.
-      return file.name.toLowerCase().replace(/[^\w\s]/gi, "");
-    }
-    return 0;
+  if (sortBy === "default") {
+    return file.index;
   }
+  if (sortBy === "date") {
+    return file.date;
+  }
+  else if (sortBy === "size") {
+    return file.size;
+  }
+  else if (sortBy === "count") {
+    return file.count;
+  }
+  else if (sortBy === "name") {
+    // Remove special characters.
+    return file.name.toLowerCase().replace(/[^\w\s]/gi, "");
+  }
+  return 0;
+}
 
 function sortFiles(files: Image[], { sortBy, sortOrder }: { sortBy: string, sortOrder: number }) {
   if (sortBy === "last-accessed") {
@@ -264,7 +283,7 @@ async function convertImageToPng(name: string): Promise<Blob | undefined | null>
 
       ctx.drawImage(img, 0, 0);
       canvas.toBlob(blob => {
-          resolve(blob);
+        resolve(blob);
       }, "image/png");
     }
     img.src = url;

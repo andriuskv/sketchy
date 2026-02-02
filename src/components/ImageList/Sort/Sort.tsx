@@ -14,7 +14,7 @@ type Props = {
 export default function Sort({ sortOptions, sortImages }: Props) {
   const { sortBy, sortOrder } = sortOptions;
 
-  function changeSortOrder({ target }:ChangeEvent<HTMLInputElement>) {
+  function changeSortOrder({ target }: ChangeEvent<HTMLInputElement>) {
     sortImages(sortBy, Number(target.value));
   }
 
@@ -23,7 +23,7 @@ export default function Sort({ sortOptions, sortImages }: Props) {
       toggle={{
         body: (
           <>
-            <Icon id="sort"/>
+            <Icon id="sort" />
             <span>Sort</span>
           </>
         ),
@@ -39,13 +39,15 @@ export default function Sort({ sortOptions, sortImages }: Props) {
           onClick={() => sortImages("date")}>Date</button>
         <button className={`btn text-btn dropdown-btn sort-dropdown-btn${sortBy === "size" ? " active" : ""}`}
           onClick={() => sortImages("size")}>Size</button>
+        <button className={`btn text-btn dropdown-btn sort-dropdown-btn${sortBy === "count" ? " active" : ""}`}
+          onClick={() => sortImages("count")}>Count</button>
       </div>
       <div className="dropdown-group">
         <label className="dropdown-btn radio-container sort-dropdown-radio">
           <input type="radio" className="sr-only radio-input"
             name="sortOrder" value="1"
             onChange={changeSortOrder}
-            checked={sortOrder === 1}/>
+            checked={sortOrder === 1} />
           <div className="radio"></div>
           <span className="radio-label">Ascending</span>
         </label>
@@ -53,7 +55,7 @@ export default function Sort({ sortOptions, sortImages }: Props) {
           <input type="radio" className="sr-only radio-input"
             onChange={changeSortOrder}
             name="sortOrder" value="-1"
-            checked={sortOrder === -1}/>
+            checked={sortOrder === -1} />
           <div className="radio"></div>
           <span className="radio-label">Descending</span>
         </label>
