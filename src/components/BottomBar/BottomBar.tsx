@@ -27,6 +27,7 @@ function getDefaultSession(): FormSession {
     randomize: true,
     randomizeFlip: false,
     duration: 180,
+    customDuration: false,
     grace: 5,
     active: false
   };
@@ -41,7 +42,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
   const modalRef = useRef<HTMLDialogElement>(null);
   const activeSession = sessions.find(sessions => sessions.active) || sessions[0];
   const [modal, setModal] = useState<{ id: string } | null>(null);
-  const [customDuration, setCustomDuration] = useState(false);
+  const [customDuration, setCustomDuration] = useState(activeSession.customDuration);
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const target = event.target;
@@ -61,15 +62,23 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
     const value = event.target.value.trim();
     const index = sessions.findIndex(session => session.id === activeSession.id);
 
-    if (value !== "custom") {
-      const newSessions = sessions.with(index, {
+    let newSessions: FormSession[];
+
+    if (value == "custom") {
+      newSessions = sessions.with(index, {
+        ...sessions[index],
+        customDuration: true
+      });
+    }
+    else {
+      newSessions = sessions.with(index, {
         ...sessions[index],
         duration: parseInt(value, 10)
       });
-      setSessions(newSessions);
-      saveSessions(newSessions);
     }
-    setCustomDuration(value === "custom");
+    setSessions(newSessions);
+    saveSessions(newSessions);
+    setCustomDuration(value == "custom");
   }
 
   function enableSessionTitleEdit(id: string) {

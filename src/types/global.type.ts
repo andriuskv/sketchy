@@ -15,6 +15,7 @@ type Prefs = {
   randomize: boolean,
   randomizeFlip: boolean,
   duration: number,
+  customDuration?: boolean,
   grace: number
 };
 
