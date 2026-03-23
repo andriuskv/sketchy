@@ -23,6 +23,17 @@ type StateImage = {
   url: string
 }
 
+function getDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
+  return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+}
+
+function getMidpoint(p1: { x: number, y: number }, p2: { x: number, y: number }) {
+  return {
+    x: (p1.x + p2.x) / 2,
+    y: (p1.y + p2.y) / 2
+  };
+}
+
 function getImage(index: number, images: Image[]) {
   return {
     index,
@@ -39,6 +50,8 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
   const root = useRef(document.documentElement);
   const [copyMessage, setCopyMessage] = useState("");
   const zoomAtPos = useRef({ x: 0, y: 0 });
+  const activePointers = useRef<Map<number, { x: number, y: number }>>(new Map());
+  const lastPinchDistance = useRef(0);
 
   useEffect(() => {
     setImage(getImage(index, images));
@@ -226,39 +239,114 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
     target.style.setProperty("--scale", "1");
   }
 
-  function handlePointerDown(event: ReactPointerEvent) {
-    const imageElement = imageRef.current;
+  function handlePointerMove(event: PointerEvent) {
+    activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
-    if (!imageElement || event.button !== 0 || (event.target as Element | null)?.closest(".viewer-bar")) {
+    if (activePointers.current.size === 1) {
+      const target = document.querySelector(".viewer-image-container") as HTMLImageElement;
+      const { clientX, clientY } = event;
+      const x = clientX - pointerPosStart.current.x;
+      const y = clientY - pointerPosStart.current.y;
+
+      target.style.setProperty("--x", `${x}px`);
+      target.style.setProperty("--y", `${y}px`);
+    }
+    else if (activePointers.current.size === 2) {
+      const points = Array.from(activePointers.current.values());
+      const distance = getDistance(points[0], points[1]);
+      const midpoint = getMidpoint(points[0], points[1]);
+
+      const target = imageRef.current!;
+      const container = target.parentElement!;
+      const scale = parseFloat(target.style.getPropertyValue("--scale"));
+
+      const scaleFactor = distance / lastPinchDistance.current;
+      let nextScale = scale * scaleFactor;
+
+      if (nextScale > 16) {
+        nextScale = 16;
+      }
+
+      if (nextScale < 0.2) {
+        nextScale = 0.2;
+      }
+
+      const actualScaleFactor = nextScale / scale;
+      const { x, y } = getZoomAtPos(target, actualScaleFactor);
+
+      const dx = midpoint.x - zoomAtPos.current.x;
+      const dy = midpoint.y - zoomAtPos.current.y;
+
+      container.style.setProperty("--x", (x + dx).toString() + "px");
+      container.style.setProperty("--y", (y + dy).toString() + "px");
+      target.style.setProperty("--scale", (nextScale).toString());
+
+      lastPinchDistance.current = distance;
+      zoomAtPos.current = midpoint;
+    }
+  }
+
+  function handlePointerUp(event: PointerEvent) {
+    activePointers.current.delete(event.pointerId);
+
+    if (activePointers.current.size === 0) {
+      root.current.style.cursor = "";
+      root.current.style.userSelect = "";
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    }
+    else if (activePointers.current.size === 1) {
+      const remainingPointer = Array.from(activePointers.current.values())[0];
+      const imageElement = imageRef.current;
+
+      if (imageElement) {
+        const rect = imageElement.getBoundingClientRect();
+        const translateAmount = 0.5;
+        pointerPosStart.current.x = remainingPointer.x - rect.left - (rect.width * translateAmount);
+        pointerPosStart.current.y = remainingPointer.y - rect.top - (rect.height * translateAmount);
+      }
+    }
+  }
+
+  function handlePointerDown(event: ReactPointerEvent) {
+    if ((event.target as Element | null)?.closest(".viewer-bar")) {
       return;
     }
-    const rect = imageElement.getBoundingClientRect();
-    const translateAmount = 0.5;
-    const x = event.clientX - rect.left - (rect.width * translateAmount);
-    const y = event.clientY - rect.top - (rect.height * translateAmount);
 
-    pointerPosStart.current.x = x;
-    pointerPosStart.current.y = y;
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp, { once: true });
-    root.current.style.cursor = "grabbing";
-    root.current.style.userSelect = "none";
-  }
+    activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
-  function handlePointerMove(event: PointerEvent) {
-    const target = document.querySelector(".viewer-image-container") as HTMLImageElement;
-    const { clientX, clientY } = event;
-    const x = clientX - pointerPosStart.current.x;
-    const y = clientY - pointerPosStart.current.y;
+    if (activePointers.current.size === 1) {
+      if (event.button !== 0) {
+        activePointers.current.delete(event.pointerId);
+        return;
+      }
 
-    target.style.setProperty("--x", `${x}px`);
-    target.style.setProperty("--y", `${y}px`);
-  }
+      const imageElement = imageRef.current;
 
-  function handlePointerUp() {
-    root.current.style.cursor = "";
-    root.current.style.userSelect = "";
-    window.removeEventListener("pointermove", handlePointerMove);
+      if (!imageElement) {
+        return;
+      }
+
+      const rect = imageElement.getBoundingClientRect();
+      const translateAmount = 0.5;
+      const x = event.clientX - rect.left - (rect.width * translateAmount);
+      const y = event.clientY - rect.top - (rect.height * translateAmount);
+
+      pointerPosStart.current.x = x;
+      pointerPosStart.current.y = y;
+
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+      window.addEventListener("pointercancel", handlePointerUp);
+      root.current.style.cursor = "grabbing";
+      root.current.style.userSelect = "none";
+    }
+    else if (activePointers.current.size === 2) {
+      const points = Array.from(activePointers.current.values());
+      lastPinchDistance.current = getDistance(points[0], points[1]);
+      zoomAtPos.current = getMidpoint(points[0], points[1]);
+    }
   }
 
   function handleImageLoad(event: SyntheticEvent) {
@@ -315,6 +403,9 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
   }
 
   function handleMousePosChange(event: ReactPointerEvent) {
+    if (activePointers.current.size > 0) {
+      return;
+    }
     zoomAtPos.current = { x: event.clientX, y: event.clientY };
   }
 
