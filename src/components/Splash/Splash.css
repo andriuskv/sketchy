@@ -44,7 +44,7 @@
   gap: var(--space-xl);
   padding: var(--space-md);
   margin-top: var(--space-xl);
-  margin-bottom: auto;
+  margin-bottom: var(--space-xl);
 }
 
 .splash-btn {
@@ -68,4 +68,12 @@
     width: 24px;
     height: 24px;
   }
+}
+
+.splash-settings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: auto;
+
 }

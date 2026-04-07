@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
     "outDir": "dist",
     "sourceMap": true,
     "module": "ESNext",
@@ -20,22 +19,19 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "paths": {
-      "@/*": ["*"],
-      "services/*": ["services/*"],
-      "components/*": ["components/*"],
-      "contexts/*": ["contexts/*"],
-      "hooks/*": ["hooks/*"],
-      "types/*": ["types/*"],
-      "assets/*": ["assets/*"],
-      "lang/*": ["lang/*"],
-      "utils": ["utils.ts"]
+      "@/*": ["./src/*"],
+      "services/*": ["./src/services/*"],
+      "components/*": ["./src/components/*"],
+      "contexts/*": ["./src/contexts/*"],
+      "hooks/*": ["./src/hooks/*"],
+      "types/*": ["./src/types/*"],
+      "assets/*": ["./src/assets/*"],
+      "lang/*": ["./src/lang/*"],
+      "utils": ["./src/utils.ts"]
     },
     "types": ["vite/client"]
   },
   "lib": ["DOM", "ESNext", "webworker"],
   "typeRoots": ["node_modules/@types", "src/types"],
-  "include": [
-    "src"
-  ],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "public"]
 }

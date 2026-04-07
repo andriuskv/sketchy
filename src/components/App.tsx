@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useState, useRef, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { shuffleArray } from "@/utils";
 import * as filesService from "services/files";
 import Session from "components/Session/Session";
@@ -15,6 +15,7 @@ function App() {
   const seletedImageCount = images.filter(image => image.selected).length;
   const [uploading, setUploading] = useState(false);
   const [viewerImage, setViewerImage] = useState<{ index: number } | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -34,7 +35,14 @@ function App() {
     try {
       setUploading(true);
       const newImages = await filesService.showOpenFilePicker(images);
-      setImages(images.concat(newImages));
+      const updatedImages = images.concat(newImages);
+      setImages(updatedImages);
+
+      const startImmediately = localStorage.getItem("startImmediately");
+
+      if (startImmediately) {
+        startSession(formRef.current!, updatedImages);
+      }
     } catch (e) {
       console.log(e);
     } finally {
@@ -46,7 +54,14 @@ function App() {
     try {
       setUploading(true);
       const newImages = await filesService.showDirectoryPicker(images);
-      setImages(images.concat(newImages));
+      const updatedImages = images.concat(newImages);
+      setImages(updatedImages);
+
+      const startImmediately = localStorage.getItem("startImmediately");
+
+      if (startImmediately) {
+        startSession(formRef.current!, updatedImages);
+      }
     } catch (e) {
       console.log(e);
     } finally {
@@ -59,13 +74,18 @@ function App() {
       return;
     }
     const newImages = filesService.getUniqueImages(target.files as unknown as File[], images);
-    setImages(images.concat(newImages));
+    const updatedImages = images.concat(newImages);
+    setImages(updatedImages);
     target.value = "";
+
+    const startImmediately = localStorage.getItem("startImmediately");
+
+    if (startImmediately) {
+      startSession(formRef.current!, updatedImages);
+    }
   }
 
-  function startSession(event: FormEvent) {
-    event.preventDefault();
-
+  function startSession(formElement: HTMLFormElement, images: Image[]) {
     interface FormElements extends HTMLFormControlsCollection {
       count: HTMLInputElement;
       randomize: HTMLInputElement;
@@ -75,7 +95,6 @@ function App() {
       grace: HTMLInputElement;
     }
 
-    const formElement = event.target as HTMLFormElement;
     const elements = formElement.elements as FormElements;
     const imageCache = JSON.parse(localStorage.getItem("imageCache")!) || {};
 
@@ -128,6 +147,11 @@ function App() {
     setImages(newImages);
     localStorage.setItem("imageCache", JSON.stringify(imageCache));
     localStorage.setItem("preferences", JSON.stringify(preferences));
+  }
+
+  function handleFormSubmit(event: FormEvent) {
+    event.preventDefault();
+    startSession(event.target as HTMLFormElement, images);
   }
 
   function closeSession() {
@@ -244,7 +268,7 @@ function App() {
         <ImageList images={images} handleImageSelection={handleImageSelection} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} resetImageCache={resetImageCache} /> :
         <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
       }
-      <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImageCount} startSession={startSession} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
+      <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImageCount} handleFormSubmit={handleFormSubmit} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} formRef={formRef} />
     </div>
   );
 }
