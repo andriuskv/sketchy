@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ChangeEvent, useRef } from "react";
+import { useState, type RefObject, type SubmitEvent, type ChangeEvent, useRef } from "react";
 import { getRandomString } from "@/utils";
 import Dropdown from "components/Dropdown/Dropdown";
 import FileUploadButton from "components/FileUploadButton/FileUploadButton";
@@ -11,7 +11,8 @@ type Props = {
   uploading: boolean,
   imageCount: number,
   selected: number,
-  startSession: (event: FormEvent) => void,
+  formRef: RefObject<HTMLFormElement | null>,
+  handleFormSubmit: (event: SubmitEvent) => void,
   resetSelected: () => void,
   clearList: () => void,
   showFilePicker: () => void,
@@ -33,7 +34,7 @@ function getDefaultSession(): FormSession {
   };
 }
 
-export default function BottomBar({ uploading, imageCount, selected, startSession, resetSelected, clearList, showFilePicker, showDirPicker, handleFileChange }: Props) {
+export default function BottomBar({ uploading, imageCount, selected, formRef, handleFormSubmit, resetSelected, clearList, showFilePicker, showDirPicker, handleFileChange }: Props) {
   const [sessions, setSessions] = useState<FormSession[]>(() => {
     const sessions = localStorage.getItem("sessions");
 
@@ -125,7 +126,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
     saveSessions(newSession);
   }
 
-  function addSession(event: FormEvent) {
+  function addSession(event: SubmitEvent) {
     event.preventDefault();
 
     interface FormElements extends HTMLFormControlsCollection {
@@ -150,7 +151,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
     closeModal();
   }
 
-  function editSesison(event: FormEvent) {
+  function editSesison(event: SubmitEvent) {
     event.preventDefault();
 
     interface FormElements extends HTMLFormControlsCollection {
@@ -194,7 +195,7 @@ export default function BottomBar({ uploading, imageCount, selected, startSessio
 
   return (
     <>
-      <form className="container bottom-bar" onSubmit={startSession}>
+      <form className="container bottom-bar" onSubmit={handleFormSubmit} ref={formRef}>
         <div className="bottom-bar-left">
           <div className="bottom-bar-left-header">
             <h3 className="bottom-bar-title">Preferences</h3>
