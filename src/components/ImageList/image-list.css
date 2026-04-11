@@ -5,7 +5,15 @@
 }
 
 .image-list-container {
-  overflow: auto;
+  --bottom-padding: var(--preferences-size);
+
+  position: relative;
+  overflow-y: auto;
+  transition: padding-bottom 0.2s;
+  backface-visibility: hidden;
+  will-change: scroll-position;
+  flex-grow: 1;
+  padding-bottom: var(--bottom-padding);
 }
 
 .image-list {
@@ -14,7 +22,6 @@
   grid-template-columns: repeat(auto-fill, 264px);
   gap: var(--space-md);
   padding-block: var(--space-md);
-  backface-visibility: hidden;
 
   @media (width <=580px) {
     grid-template-columns: repeat(2, 1fr);

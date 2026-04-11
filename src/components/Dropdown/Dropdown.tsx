@@ -20,7 +20,7 @@ type Props = PropsWithChildren & {
   },
   body?: {
     className: string
-   }
+  }
 }
 
 type State = {
@@ -140,8 +140,10 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
 
         if (newState.data && drop.current) {
           const dropdownHeight = drop.current.getBoundingClientRect().height + 8;
+          const toggleBtnRect = toggleBtn.current?.parentElement?.getBoundingClientRect();
+          const bottom = toggleBtnRect?.bottom;
 
-          if (newState.data.bottom + dropdownHeight > newState.data.height && newState.data.top > dropdownHeight) {
+          if ((newState.data.bottom + dropdownHeight > newState.data.height && newState.data.top > dropdownHeight) || (bottom && bottom + dropdownHeight > newState.data.height)) {
             onTop = true;
           }
         }
@@ -156,10 +158,10 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
 
   return (
     <div id={state.id} className={`dropdown-container${container ? ` ${container.className}` : ""}${state.visible ? " visible" : ""}`}>
-      <ToggleBtn params={toggle} toggleDropdown={toggleDropdown} ref={toggleBtn} visible={state.visible}/>
+      <ToggleBtn params={toggle} toggleDropdown={toggleDropdown} ref={toggleBtn} visible={state.visible} />
       {usePortal && CSS.supports("anchor-name", "--test") ? (
         createPortal(
-          <div role="menu" className={`container container-opaque dropdown portal${body? ` ${body.className}` : ""}${state.reveal? " reveal" : ""}${state.visible? " visible" : ""}${state.onTop? " top" : ""}${state.hiding? " hiding" : ""}`} style={{ "positionAnchor": `--anchor-${state.id}` } as CSSProperties } ref={drop}>{children}</div>,
+          <div role="menu" className={`container container-opaque dropdown portal${body ? ` ${body.className}` : ""}${state.reveal ? " reveal" : ""}${state.visible ? " visible" : ""}${state.onTop ? " top" : ""}${state.hiding ? " hiding" : ""}`} style={{ "positionAnchor": `--anchor-${state.id}` } as CSSProperties} ref={drop}>{children}</div>,
           document.body
         )
       ) : (

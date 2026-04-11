@@ -99,6 +99,7 @@ function getUniqueImages(files: File[], images: Image[]) {
 
   for (const file of files) {
     newImages.push({
+      id: crypto.randomUUID(),
       index,
       file,
       count: 0,
@@ -169,6 +170,7 @@ async function showOpenFilePicker(images: Image[]) {
   for (const handle of handles) {
     const file = await handle.getFile();
     files.push({
+      id: crypto.randomUUID(),
       index,
       file,
       name: file.name,
@@ -192,6 +194,7 @@ async function showDirectoryPicker(images: Image[]) {
     if (value.kind === "file") {
       const file = await value.getFile();
       files.push({
+        id: crypto.randomUUID(),
         index,
         file,
         name: file.name,

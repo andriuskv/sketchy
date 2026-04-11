@@ -1,4 +1,4 @@
-import { useState, type RefObject, type SubmitEvent, type ChangeEvent, useRef } from "react";
+import { useState, useEffect, type RefObject, type SubmitEvent, type ChangeEvent, useRef } from "react";
 import { getRandomString } from "@/utils";
 import Dropdown from "components/Dropdown/Dropdown";
 import FileUploadButton from "components/FileUploadButton/FileUploadButton";
@@ -43,7 +43,20 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
   const modalRef = useRef<HTMLDialogElement>(null);
   const activeSession = sessions.find(sessions => sessions.active) || sessions[0];
   const [modal, setModal] = useState<{ id: string } | null>(null);
-  const [customDuration, setCustomDuration] = useState(activeSession.customDuration);
+  const [preferencesHidden, setPreferencesHidden] = useState(() => localStorage.getItem("preferencesHidden") === "1");
+
+  useEffect(() => {
+    let maxSize = 216;
+
+    if (activeSession.customDuration) {
+      maxSize = 250;
+    }
+    document.documentElement.style.setProperty("--preferences-size", preferencesHidden ? "54px" : `${maxSize}px`);
+
+    return () => {
+      document.documentElement.style.setProperty("--preferences-size", "");
+    }
+  }, [preferencesHidden, activeSession]);
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const target = event.target;
@@ -74,12 +87,12 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
     else {
       newSessions = sessions.with(index, {
         ...sessions[index],
-        duration: parseInt(value, 10)
+        duration: parseInt(value, 10),
+        customDuration: false
       });
     }
     setSessions(newSessions);
     saveSessions(newSessions);
-    setCustomDuration(value == "custom");
   }
 
   function enableSessionTitleEdit(id: string) {
@@ -193,60 +206,70 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
     setModal(null);
   }
 
+  function togglePreferences() {
+    const newState = !preferencesHidden;
+    setPreferencesHidden(newState);
+    localStorage.setItem("preferencesHidden", newState ? "1" : "0");
+  }
+
   return (
     <>
-      <form className="container bottom-bar" onSubmit={handleFormSubmit} ref={formRef}>
+      <form className={`container bottom-bar ${preferencesHidden ? "hidden" : ""}`} onSubmit={handleFormSubmit} ref={formRef}>
         <div className="bottom-bar-left">
           <div className="bottom-bar-left-header">
-            <h3 className="bottom-bar-title">Preferences</h3>
+            <h3 className="bottom-bar-title">
+              <button type="button" className="btn text-btn text-btn-alt bottom-bar-title-btn" onClick={togglePreferences}>Preferences</button>
+            </h3>
             <SessionSelection
               activeSession={activeSession} sessions={sessions}
               enableSessionTitleEdit={enableSessionTitleEdit}
               selectTimerWithState={selectTimerWithState} removeSession={removeSession} showModal={showModal}>
             </SessionSelection>
           </div>
-          <label className="bottom-bar-form-label">
-            <span>Size</span>
-            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.count} onChange={handleInputChange} name="count" />
-          </label>
-          <label className="checkbox-container bottom-bar-form-label">
-            <span>Randomize</span>
-            <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomize} onChange={handleInputChange} name="randomize" />
-            <div className="checkbox">
-              <div className="checkbox-tick"></div>
-            </div>
-          </label>
-          <label className="bottom-bar-form-label">
-            <span>Duration</span>
-            <div className="select-container">
-              <select className="input select bottom-bar-duration-input" onChange={handleSelectChange} value={customDuration ? "custom" : activeSession.duration} name="durationSelect">
-                <option value="30">30 sec</option>
-                <option value="60">1 min</option>
-                <option value="120">2 min</option>
-                <option value="180">3 min</option>
-                <option value="300">5 min</option>
-                <option value="600">10 min</option>
-                <option value="900">15 min</option>
-                <option value="1800">30 min</option>
-                <option value="3600">1 hour</option>
-                <option value="custom">Custom (sec)</option>
-              </select>
-            </div>
-            {customDuration && (
-              <input type="number" className="input bottom-bar-duration-input bottom-bar-duration-custom-input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.duration} onChange={handleInputChange} name="duration" />
-            )}
-          </label>
-          <label className="checkbox-container bottom-bar-form-label">
-            <span>Randomize flip</span>
-            <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomizeFlip} onChange={handleInputChange} name="randomizeFlip" />
-            <div className="checkbox">
-              <div className="checkbox-tick"></div>
-            </div>
-          </label>
-          <label className="bottom-bar-form-label">
-            <span>Grace period</span>
-            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.grace} onChange={handleInputChange} name="grace" />
-          </label>
+          <div className="bottom-bar-left-content">
+            <label className="bottom-bar-form-label">
+              <span>Size</span>
+              <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.count} onChange={handleInputChange} name="count" />
+            </label>
+            <label className="checkbox-container bottom-bar-form-label">
+              <span>Randomize</span>
+              <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomize} onChange={handleInputChange} name="randomize" />
+              <div className="checkbox">
+                <div className="checkbox-tick"></div>
+              </div>
+            </label>
+            <label className="bottom-bar-form-label">
+              <span>Duration</span>
+              <div className="select-container">
+                <select className="input select bottom-bar-duration-input" onChange={handleSelectChange} value={activeSession.customDuration ? "custom" : activeSession.duration} name="durationSelect">
+                  <option value="30">30 sec</option>
+                  <option value="60">1 min</option>
+                  <option value="120">2 min</option>
+                  <option value="180">3 min</option>
+                  <option value="300">5 min</option>
+                  <option value="600">10 min</option>
+                  <option value="900">15 min</option>
+                  <option value="1800">30 min</option>
+                  <option value="3600">1 hour</option>
+                  <option value="custom">Custom (sec)</option>
+                </select>
+              </div>
+              {activeSession.customDuration && (
+                <input type="number" className="input bottom-bar-duration-input bottom-bar-duration-custom-input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.duration} onChange={handleInputChange} name="duration" />
+              )}
+            </label>
+            <label className="checkbox-container bottom-bar-form-label">
+              <span>Randomize flip</span>
+              <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomizeFlip} onChange={handleInputChange} name="randomizeFlip" />
+              <div className="checkbox">
+                <div className="checkbox-tick"></div>
+              </div>
+            </label>
+            <label className="bottom-bar-form-label">
+              <span>Grace period</span>
+              <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.grace} onChange={handleInputChange} name="grace" />
+            </label>
+          </div>
         </div>
         <div className="bottom-bar-right">
           <span className="bottom-bar-image-count">{imageCount} image(s){selected === imageCount ? null : `, ${selected} selected`}</span>
