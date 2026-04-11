@@ -193,10 +193,6 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
     else if (key === "m") {
       mirrorImage();
     }
-    else if (key === "c" && event.ctrlKey && window.getSelection()?.isCollapsed) {
-      event.preventDefault();
-      copyImage();
-    }
   });
   const onWheel = useEffectEvent((event: WheelEvent) => {
     const { deltaY } = event;

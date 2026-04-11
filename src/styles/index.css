@@ -1,7 +1,9 @@
 @import "./fonts.css";
 @import "./variables.css";
 
-*, *::after, *::before {
+*,
+*::after,
+*::before {
   box-sizing: border-box;
 }
 
@@ -17,6 +19,7 @@ html {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 
   &.light {
     color-scheme: light;
@@ -26,12 +29,13 @@ html {
     color-scheme: dark;
   }
 
-  @media (width > 1920px)  {
+  @media (width > 1920px) {
     font-size: 16px;
   }
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -60,7 +64,10 @@ svg {
   fill: currentColor;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   margin-top: 0;
   margin-bottom: 0;
   font-weight: normal;
@@ -118,8 +125,9 @@ textarea {
   resize: none;
 }
 
-.input, .btn {
-  --background-color: light-dark( var(--color-black-4), var(--color-white-10));
+.input,
+.btn {
+  --background-color: light-dark(var(--color-black-4), var(--color-white-10));
 
   background-color: var(--background-color);
   box-shadow: var(--fg-shadow);
@@ -132,7 +140,7 @@ textarea {
 }
 
 .btn {
-  --color: light-dark( var(--color-black-40), var(--color-white-80));
+  --color: light-dark(var(--color-black-40), var(--color-white-80));
 
   padding: var(--space-sm) var(--space-xl);
   border: 1px solid var(--color-white-4);
@@ -168,13 +176,16 @@ textarea {
   }
 }
 
-.icon-btn, .text-btn, .icon-text-btn {
+.icon-btn,
+.text-btn,
+.icon-text-btn {
   --background-color: transparent;
 
   border-color: transparent;
   box-shadow: none;
 
-  &:hover, &:focus-visible {
+  &:hover,
+  &:focus-visible {
     --background-color: light-dark(var(--color-black-4), var(--color-white-10));
     --color: light-dark(var(--color-black-60), (--color-white));
 
@@ -208,6 +219,57 @@ textarea {
   border-radius: 50%;
 }
 
+.text-btn-alt {
+  padding: 0;
+  position: relative;
+
+  &::before {
+    --background-color: light-dark(var(--color-black-4), var(--color-white-10));
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 24px;
+    corner-shape: squircle;
+    background-color: var(--background-color);
+    box-shadow: var(--fg-shadow);
+    scale: 0.8;
+    opacity: 0;
+    transition: 0.1s scale, 0.1s opacity;
+  }
+
+  &:hover,
+  &:focus-visible {
+    --background-color: transparent;
+    --color: light-dark(var(--color-black-60), (--color-white));
+
+    border-color: transparent;
+
+    &::before {
+      opacity: 1;
+      scale: 1.2;
+    }
+
+    &:disabled {
+      --background-color: transparent;
+    }
+  }
+
+  &:hover {
+    box-shadow: none;
+
+    &:disabled {
+      --background-color: transparent;
+
+      border-color: transparent;
+    }
+  }
+
+  &:focus-visible {
+    box-shadow: none;
+  }
+}
+
+
 .icon-text-btn {
   display: flex;
   justify-content: center;
@@ -227,7 +289,8 @@ textarea {
   padding: var(--space-md) var(--space-xxl);
   font-size: var(--text-lg);
 
-  &:hover, &:focus-visible {
+  &:hover,
+  &:focus-visible {
     --color: var(--color-white);
     --background-color: var(--color-primary-20);
   }
@@ -273,7 +336,7 @@ textarea {
 }
 
 .sr-only {
-	position: absolute;
+  position: absolute;
   width: 1px;
   height: 1px;
   padding: 0;
@@ -319,11 +382,11 @@ textarea {
 }
 
 .checkbox-input {
-  &:checked + .checkbox .checkbox-tick {
+  &:checked+.checkbox .checkbox-tick {
     display: block;
   }
 
-  &:focus-visible + .checkbox {
+  &:focus-visible+.checkbox {
     box-shadow: var(--focus-shadow);
   }
 }
@@ -334,11 +397,11 @@ textarea {
 }
 
 .radio-input {
-  &:checked + .radio {
+  &:checked+.radio {
     background-color: var(--color-primary);
   }
 
-  &:focus-visible + .radio {
+  &:focus-visible+.radio {
     box-shadow: 0 0 0 1px var(--color-primary);
   }
 }

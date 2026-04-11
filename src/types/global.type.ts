@@ -1,4 +1,5 @@
 type Image = {
+  id: string,
   index: number,
   file: File,
   name: string,

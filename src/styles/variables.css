@@ -46,6 +46,7 @@
   --color-black-60: hsl(var(--accent-hue) 0% 3% / 60%);
   --color-black-100: hsl(var(--accent-hue) 0% 3% / 100%);
 
+  --color-grey-10: hsl(var(--accent-hue) 42% 93%);
   --color-grey-20: hsl(var(--accent-hue) 5% 42%);
   --color-grey-30: hsl(var(--accent-hue) 5% 30%);
   --color-grey-40: hsl(var(--accent-hue) 5% 22%);
@@ -56,11 +57,9 @@
   --color-negative: hsl(0deg 86% 72%);
 
   --focus-shadow: 0 0 0 2px var(--color-primary);
-  --fg-shadow:
-    1px 2px 2px 0 var(--color-black-4),
+  --fg-shadow: 1px 2px 2px 0 var(--color-black-4),
     2px 4px 4px 0 var(--color-black-2);
-  --highligh-shadow:
-    1px 2px 2px 0 var(--color-black-8),
+  --highligh-shadow: 1px 2px 2px 0 var(--color-black-8),
     2px 4px 4px 0 var(--color-black-4),
     4px 8px 8px 0 var(--color-black-2);
 

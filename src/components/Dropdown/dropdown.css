@@ -15,7 +15,7 @@
   flex-direction: column;
   min-width: 160px;
   padding: var(--space-md) 1px;
-  background-color: light-dark(var(--color-white), var(--color-grey-40));
+  background-color: light-dark(var(--color-white), var(--color-grey-30));
   transform: translateY(var(--space-sm));
   white-space: nowrap;
   border-radius: 12px;

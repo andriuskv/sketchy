@@ -67,6 +67,10 @@
 .viewer-bottom-bar {
   bottom: var(--space-md);
   padding-left: var(--space-xl);
+
+  .svg-icon {
+    pointer-events: none;
+  }
 }
 
 .viewer-bar-item-info {

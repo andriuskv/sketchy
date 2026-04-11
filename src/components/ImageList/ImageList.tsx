@@ -79,12 +79,12 @@ export default function ImageList({ images, handleImageSelection, viewImage, sor
       <div className="image-list-container" ref={container}>
         <ul className="container image-list">
           {images.map((image, index) => (
-            <Item image={image} index={index} key={image.name} container={container}
+            <Item image={image} index={index} key={image.id} container={container}
               handleImageSelection={handleImageSelection} viewImage={viewImage} />
           ))}
         </ul>
       </div>
-      {sortImages ? <ToTop offset="200px" /> : <ToTop />}
+      <ToTop />
     </div>
   );
 }

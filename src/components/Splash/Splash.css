@@ -3,6 +3,7 @@
   flex-direction: column;
   grid-row: 1 / 1;
   grid-column: 1 / 1;
+  height: 80vh;
   background-image: url("../../assets/wave.svg");
   background-repeat: no-repeat;
   background-size: cover;

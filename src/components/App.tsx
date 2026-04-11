@@ -1,4 +1,4 @@
-import { useState, useRef, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useState, useEffect, useRef, type ChangeEvent, type DragEvent, type SubmitEvent } from "react";
 import { shuffleArray } from "@/utils";
 import * as filesService from "services/files";
 import Session from "components/Session/Session";
@@ -149,7 +149,7 @@ function App() {
     localStorage.setItem("preferences", JSON.stringify(preferences));
   }
 
-  function handleFormSubmit(event: FormEvent) {
+  function handleFormSubmit(event: SubmitEvent) {
     event.preventDefault();
     startSession(event.target as HTMLFormElement, images);
   }

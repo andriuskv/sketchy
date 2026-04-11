@@ -1,13 +1,16 @@
 .to-top-button {
+  --bottom: calc(var(--preferences-size) - 12px);
+
   z-index: 1;
   position: absolute;
   right: 14px;
-  bottom: var(--space-md);
+  bottom: var(--bottom, var(--space-md));
   display: none;
   height: auto;
   padding: var(--space-md);
   box-shadow: var(--highligh-shadow);
   background-color: light-dark(var(--color-white), var(--color-grey-30));
+  transition: bottom 0.2s;
 
   &:hover {
     background-color: light-dark(hsl(from var(--color-white) h 80% 95%), var(--color-grey-30));
