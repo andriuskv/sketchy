@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ChangeEvent, type DragEvent, type SubmitEvent } from "react";
+import { useState, useRef, type ChangeEvent, type DragEvent, type SubmitEvent } from "react";
 import { shuffleArray } from "@/utils";
 import * as filesService from "services/files";
 import Session from "components/Session/Session";
