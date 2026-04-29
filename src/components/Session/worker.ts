@@ -1,17 +1,14 @@
 let timeoutId = 0;
-let params: { id: string, duration: number } | null = null;
+let params: { id: string, duration: number, interval: number } | null = null;
 
-onmessage = function({ data }) {
-  const { id, type, action, duration } = data;
+onmessage = function ({ data }) {
+  const { id, action, duration, interval = 1000 } = data;
 
-  if (type === "clock") {
-    updateClock();
-  }
-  else if (action === "start") {
+  if (action === "start") {
     clearTimeout(timeoutId);
 
     if (duration) {
-      params = { id, duration: duration || 0 };
+      params = { id, duration: duration || 0, interval };
       countdown(performance.now());
     }
     else {
@@ -31,19 +28,20 @@ function countdown(elapsed: number) {
   if (!params) {
     return;
   }
-  const interval = 1000;
   const diff = performance.now() - elapsed;
+  const interval = params.interval;
+  const adjustedInterval = interval - diff;
 
   elapsed += interval;
-  params.duration -= 1;
+  params.duration -= adjustedInterval;
 
   timeoutId = self.setTimeout(() => {
-    postMessage({ elapsed, diff: interval, ...params });
+    postMessage({ elapsed, ...params });
 
     if (params && params.duration >= 0) {
       countdown(elapsed);
     }
-  }, interval - diff);
+  }, adjustedInterval);
 }
 
 function update(start: number, elapsed = 0) {
@@ -60,16 +58,4 @@ function update(start: number, elapsed = 0) {
   }, interval - diff);
 }
 
-function updateClock(elapsed = 0) {
-  const interval = 1000;
-  const diff = performance.now() - elapsed;
-
-  elapsed += interval;
-  postMessage(null);
-
-  timeoutId = self.setTimeout(() => {
-    updateClock(elapsed);
-  }, interval - diff);
-}
-
-export {};
+export { };
