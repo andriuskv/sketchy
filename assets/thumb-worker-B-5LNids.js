@@ -1,0 +1,1 @@
+(function(){onmessage=async function(t){let{file:n}=t.data,r=await e(n);postMessage({blob:r,name:n.name})};async function e(e){let t=await createImageBitmap(e),{width:n,height:r}=t,i=Math.min(n,r,384);n<r?(r=i/t.width*r,n=i):(n=i/t.height*n,r=i);let a=new OffscreenCanvas(n,r);return a.getContext(`2d`).drawImage(t,0,0,n,r),a.convertToBlob({type:e.type,quality:.72})}})();
