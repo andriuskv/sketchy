@@ -125,8 +125,8 @@ function App() {
       count: parseInt(count.value, 10),
       randomize: randomize.checked,
       randomizeFlip: randomizeFlip.checked,
-      duration: durationValue,
-      grace: parseInt(grace.value, 10),
+      duration: durationValue * 1000,
+      grace: parseInt(grace.value, 10) * 1000,
     };
 
     if (preferences.count < 1 || preferences.duration < 1 || preferences.grace < 1) {

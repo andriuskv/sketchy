@@ -25,13 +25,14 @@ type State = {
   index: number
 }
 
-const PAUSE_DURATION = 3;
+const PAUSE_DURATION = 3 * 1000;
 const STARTING = 0;
 const CONTINUING = 1;
 const SKIPPING = 2;
 const LOADING = 3;
 
 export default function Session({ session, toggleAllImages, handleImageSelection, close, repeatSession }: Props) {
+  const interval = session.duration < 10000 ? 100 : session.duration < 60000 ? 500 : 1000;
   const [state, setState] = useState<State>({
     grace: PAUSE_DURATION,
     stateText: "Starting",
@@ -55,7 +56,7 @@ export default function Session({ session, toggleAllImages, handleImageSelection
       });
       setSessionEnded(false);
     }
-    initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION });
+    initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION, interval });
 
     return () => {
       destroyWorkers();
@@ -89,7 +90,7 @@ export default function Session({ session, toggleAllImages, handleImageSelection
       duration: session.duration,
       index: nextIndex
     });
-    initWorker({ id: "grace", action: "start", duration: manual ? PAUSE_DURATION : session.grace });
+    initWorker({ id: "grace", action: "start", duration: manual ? PAUSE_DURATION : session.grace, interval });
     pip.updateImage({
       index: nextIndex,
       url: fileService.preloadImage(session.images[nextIndex])
@@ -120,7 +121,7 @@ export default function Session({ session, toggleAllImages, handleImageSelection
         stateText: "Continuing",
         stateId: CONTINUING
       });
-      initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION });
+      initWorker({ id: "grace", action: "start", duration: PAUSE_DURATION, interval });
     }
   }
 
@@ -151,7 +152,7 @@ export default function Session({ session, toggleAllImages, handleImageSelection
           paused: false,
           grace: -1
         });
-        initWorker({ id: "duration", action: "start", duration: state.duration });
+        initWorker({ id: "duration", action: "start", duration: state.duration, interval });
       }
       else {
         pip.updateGraceView(event.data.duration, state.stateText, state.grace < session.grace - PAUSE_DURATION);
@@ -185,7 +186,7 @@ export default function Session({ session, toggleAllImages, handleImageSelection
       ) : state.grace > -1 ? (
         <div className="session-grace">
           <div className="session-grace-text">{state.stateText}</div>
-          <div className="session-grace-value">{state.grace}</div>
+          <div className="session-grace-value">{Math.floor(state.grace / 1000)}</div>
           {state.stateId === LOADING && session.grace >= 10 ? (
             <div className="session-grace-btns">
               <button className={`btn text-btn${state.grace < session.grace - PAUSE_DURATION ? "" : " hidden"}`}
