@@ -1,3 +1,5 @@
+import { formatDuration } from "@/utils";
+
 const pipSupported = "documentPictureInPicture" in window;
 let pipWindow: typeof window | null = null;
 let actions: { [key: string]: any } = {};
@@ -68,6 +70,7 @@ async function init({ data, actions: viewerActions }: Params) {
       }
 
       .session-bar-progress-container {
+        z-index: 1;
         position: absolute;
         top: var(--space-xs);
         left: var(--space-sm);
@@ -129,6 +132,26 @@ async function init({ data, actions: viewerActions }: Params) {
         gap: var(--space-xl);
       }
 
+      .break-view {
+        z-index: 1;
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: var(--space-xl);
+        height: 100%;
+
+        &.hidden {
+          display: none;
+        }
+      }
+
+      .break-view-value {
+        font-size: var(--text-3xl);
+      }
+
       .viewer {
         position: relative;
         width: 100%;
@@ -147,16 +170,22 @@ async function init({ data, actions: viewerActions }: Params) {
             --background-color: var(--color-white-10);
           }
         }
+
+        &:hover, &:has(:focus-visible) {
+          .viewer-bar {
+            opacity: 1;
+            visibility: visible;
+          }
+        }
       }
 
       .viewer-bar {
-        position: absolute;
-        left: 0;
+        opacity: 0;
+        visibility: hidden;
         display: flex;
         align-items: center;
         justify-content: end;
         gap: var(--space-md);
-        width: 100%;
         padding: var(--space-md);
       }
 
@@ -208,7 +237,7 @@ async function init({ data, actions: viewerActions }: Params) {
     <div class="session-paused hidden">
       <h2 class="session-paused-title">Paused</h2>
       <div class="session-paused-buttons">
-        <button id="session-pause-btn" class="btn primary-btn">Continue</button>
+        <button id="session-pause-btn" class="btn primary-btn">Resume</button>
         <button id="session-end-btn" class="btn text-btn">Quit</button>
       </div>
     </div>
@@ -218,6 +247,14 @@ async function init({ data, actions: viewerActions }: Params) {
       <div class="session-grace-btns">
         <button id="session-grace-skip-btn" class="btn text-btn hidden">Skip Waiting</button>
         <button id="session-grace-end-btn" class="btn text-btn hidden">Quit</button>
+      </div>
+    </div>
+    <div class="break-view hidden">
+      <div class="break-text">Break</div>
+      <div class="break-value">0</div>
+      <div class="break-btns">
+        <button id="break-continue-btn" class="btn text-btn hidden">Continue</button>
+        <button id="break-end-btn" class="btn text-btn hidden">Quit</button>
       </div>
     </div>
     <div class="viewer">
@@ -244,14 +281,17 @@ async function init({ data, actions: viewerActions }: Params) {
   pipWindow.document.getElementById("skip-btn")?.addEventListener("click", () => actions.skip(), { signal: abortController.signal });
 
   pipWindow.document.getElementById("session-pause-btn")?.addEventListener("click", () => actions.pause(), { signal: abortController.signal });
-  pipWindow.document.getElementById("session-end-btn")?.addEventListener("click", handleEndSession, { signal: abortController.signal });
+  pipWindow.document.getElementById("session-end-btn")?.addEventListener("click", handleEndPractice, { signal: abortController.signal });
 
   pipWindow.document.getElementById("session-grace-skip-btn")?.addEventListener("click", () => actions.skipWaiting(), { signal: abortController.signal });
-  pipWindow.document.getElementById("session-grace-end-btn")?.addEventListener("click", handleEndSession, { signal: abortController.signal });
+  pipWindow.document.getElementById("session-grace-end-btn")?.addEventListener("click", handleEndPractice, { signal: abortController.signal });
+
+  pipWindow.document.getElementById("break-continue-btn")?.addEventListener("click", () => actions.skip(), { signal: abortController.signal });
+  pipWindow.document.getElementById("break-end-btn")?.addEventListener("click", handleEndPractice, { signal: abortController.signal });
 }
 
-function handleEndSession() {
-  actions.endSession();
+function handleEndPractice() {
+  actions.endPractice();
   close(true);
 }
 
@@ -328,10 +368,35 @@ function toggleGraceView(visible: boolean) {
   const graceView = pipWindow.document.querySelector(".session-grace") as HTMLDivElement;
   const viewer = pipWindow.document.querySelector(".viewer") as HTMLDivElement;
   const sessionPaused = pipWindow.document.querySelector(".session-paused") as HTMLDivElement;
+  const breakView = pipWindow.document.querySelector(".break-view") as HTMLDivElement;
 
   viewer.classList.toggle("hidden", visible);
   sessionPaused.classList.toggle("hidden", visible);
   graceView.classList.toggle("hidden", !visible);
+  breakView.classList.toggle("hidden", visible);
+}
+
+function toggleBreakView(visible: boolean) {
+  if (!pipWindow) {
+    return;
+  }
+  const viewer = pipWindow.document.querySelector(".viewer") as HTMLDivElement;
+  const sessionPaused = pipWindow.document.querySelector(".session-paused") as HTMLDivElement;
+  const graceView = pipWindow.document.querySelector(".session-grace") as HTMLDivElement;
+  const breakView = pipWindow.document.querySelector(".break-view") as HTMLDivElement;
+
+  viewer.classList.toggle("hidden", visible);
+  sessionPaused.classList.toggle("hidden", visible);
+  graceView.classList.toggle("hidden", visible);
+  breakView.classList.toggle("hidden", !visible);
+}
+
+function updateBreakView(value: number) {
+  if (!pipWindow) {
+    return;
+  }
+  const breakValue = pipWindow.document.querySelector(".break-value") as HTMLDivElement;
+  breakValue.textContent = formatDuration(Math.round(value / 1000));
 }
 
 function updateGraceView(value: number, text: string, showButtons: boolean) {
@@ -340,11 +405,12 @@ function updateGraceView(value: number, text: string, showButtons: boolean) {
   }
   const graceText = pipWindow.document.querySelector(".session-grace-text") as HTMLDivElement;
   const graceValue = pipWindow.document.querySelector(".session-grace-value") as HTMLDivElement;
-  const skipBtn =  pipWindow.document.getElementById("session-grace-skip-btn") as HTMLButtonElement;
+  const skipBtn = pipWindow.document.getElementById("session-grace-skip-btn") as HTMLButtonElement;
   const endBtn = pipWindow.document.getElementById("session-grace-end-btn") as HTMLButtonElement;
 
+
   graceText.textContent = text;
-  graceValue.textContent = String(value);
+  graceValue.textContent = String(Math.round(value / 1000));
 
   skipBtn.classList.toggle("hidden", !showButtons);
   endBtn.classList.toggle("hidden", !showButtons);
@@ -359,5 +425,7 @@ export {
   updateActions,
   handlePipPause,
   toggleGraceView,
-  updateGraceView
+  toggleBreakView,
+  updateGraceView,
+  updateBreakView
 };

@@ -6,13 +6,14 @@ import FolderUploadButton from "components/FolderUploadButton/FolderUploadButton
 import "./bottom-bar.css";
 import SessionSelection from "./SessionSelection/SessionSelection";
 import NewSessionModal from "./NewSessionModal/NewSessionModal";
+import ProgramModal from "./ProgramModal/ProgramModal";
 
 type Props = {
   uploading: boolean,
   imageCount: number,
   selected: number,
   formRef: RefObject<HTMLFormElement | null>,
-  handleFormSubmit: (event: SubmitEvent) => void,
+  handleFormSubmit: (event: SubmitEvent, item: FormSession | Program | null) => void,
   resetSelected: () => void,
   clearList: () => void,
   showFilePicker: () => void,
@@ -22,6 +23,7 @@ type Props = {
 
 function getDefaultSession(): FormSession {
   return {
+    type: "session",
     title: "Default",
     id: getRandomString(4),
     count: 10,
@@ -34,21 +36,44 @@ function getDefaultSession(): FormSession {
   };
 }
 
+function getDefaultProgram(): Program {
+  return {
+    type: "program",
+    title: "Default",
+    id: getRandomString(4),
+    active: false,
+    items: []
+  }
+}
+
+function findActiveItem(sessions: FormSession[], programs: Program[]): FormSession | Program {
+  return (sessions.find(session => session.active) || programs.find(program => program.active))!;
+}
+
 export default function BottomBar({ uploading, imageCount, selected, formRef, handleFormSubmit, resetSelected, clearList, showFilePicker, showDirPicker, handleFileChange }: Props) {
   const [sessions, setSessions] = useState<FormSession[]>(() => {
     const sessions = localStorage.getItem("sessions");
 
     return sessions ? JSON.parse(sessions) : [getDefaultSession()];
   });
-  const modalRef = useRef<HTMLDialogElement>(null);
-  const activeSession = sessions.find(sessions => sessions.active) || sessions[0];
-  const [modal, setModal] = useState<{ id: string } | null>(null);
+  const [programs, setPrograms] = useState<Program[]>(() => {
+    const programs = localStorage.getItem("programs");
+
+    return programs ? JSON.parse(programs) : [];
+  });
+  const sessionModalRef = useRef<HTMLDialogElement>(null);
+  const programModalRef = useRef<HTMLDialogElement>(null);
+  const activeItem = findActiveItem(sessions, programs) || sessions[0];
+  const [modal, setModal] = useState<{ type: "session" | "program", id?: string } | null>(null);
   const [preferencesHidden, setPreferencesHidden] = useState(() => localStorage.getItem("preferencesHidden") === "1");
 
   useEffect(() => {
     let maxSize = 216;
 
-    if (activeSession.customDuration) {
+    if (activeItem?.type === "program") {
+      setPreferencesHidden(true);
+    }
+    else if (activeItem?.type === "session" && activeItem.customDuration) {
       maxSize = 250;
     }
     document.documentElement.style.setProperty("--preferences-size", preferencesHidden ? "54px" : `${maxSize}px`);
@@ -56,12 +81,12 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
     return () => {
       document.documentElement.style.setProperty("--preferences-size", "");
     }
-  }, [preferencesHidden, activeSession]);
+  }, [preferencesHidden, activeItem]);
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const target = event.target;
     const value = target.type === "checkbox" ? target.checked : target.value.trim();
-    const index = sessions.findIndex(session => session.id === activeSession.id);
+    const index = sessions.findIndex(session => session.id === (activeItem as FormSession).id);
 
     const newSessions = sessions.with(index, {
       ...sessions[index],
@@ -74,7 +99,7 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
 
   function handleSelectChange(event: ChangeEvent<HTMLSelectElement>) {
     const value = event.target.value.trim();
-    const index = sessions.findIndex(session => session.id === activeSession.id);
+    const index = sessions.findIndex(session => session.id === (activeItem as FormSession).id);
 
     let newSessions: FormSession[];
 
@@ -95,48 +120,73 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
     saveSessions(newSessions);
   }
 
-  function enableSessionTitleEdit(id: string) {
-    showModal();
+  function enableItemEdit(id: string, type: "session" | "program") {
+    let params: Record<string, unknown>;
 
-    const inputElement = document.querySelector(".session-form .input") as HTMLInputElement | null;
-
-    if (inputElement) {
-      inputElement.value = sessions.find(session => session.id === id)!.title;
+    if (type === "session") {
+      params = { id, title: sessions.find(session => session.id === id)!.title };
+    } else {
+      const program = programs.find(program => program.id === id)!;
+      params = { id, title: program.title, items: program.items };
     }
-    setModal({ id })
+    showModal(type, params);
   }
 
-  function selectTimerWithState(id: string) {
-    if (activeSession.id === id) {
+  function selectItem(id: string, sessions: FormSession[], programs: Program[]) {
+    if (activeItem.id === id) {
       return;
     }
-    const newSessions = selectSession(sessions, id);
+
+    const newSessions = activateItem(sessions, id) as FormSession[];
+    const newPrograms = activateItem(programs, id) as Program[];
 
     setSessions(newSessions);
+    setPrograms(newPrograms);
+
     saveSessions(newSessions);
+    savePrograms(newPrograms);
   }
 
-  function toggleSession(sessions: FormSession[], id: string, state: boolean) {
-    const index = sessions.findIndex(session => session.id === id);
+  function toggleItem(items: (FormSession | Program)[], id: string, state: boolean) {
+    const index = items.findIndex(item => item.id === id);
 
-    return sessions.with(index, {
-      ...sessions[index],
+    if (index === -1) {
+      return items;
+    }
+    return items.with(index, {
+      ...items[index],
       active: state
     });
   }
 
-  function selectSession(sessions: FormSession[], id: string) {
-    const s1 = toggleSession(sessions, activeSession.id, false);
-    const s2 = toggleSession(s1, id, true);
+  function activateItem(items: (FormSession | Program)[], id: string) {
+    const s1 = toggleItem(items, activeItem.id, false);
+    const s2 = toggleItem(s1, id, true);
 
     return s2;
   }
 
   function removeSession() {
-    const newSession = sessions.filter(session => session.id !== activeSession.id);
+    const newSession = sessions.filter(session => session.id !== activeItem.id);
 
+    for (const program of programs) {
+      const index = program.items.findIndex(item => item.id === activeItem.id);
+
+      if (index > -1) {
+        // TODO: show message that session is used in a program.
+        console.log("Session is used in a program");
+        return;
+      }
+    }
     setSessions(newSession);
     saveSessions(newSession);
+  }
+
+  function removeProgram() {
+    const newPrograms = programs.filter(program => program.id !== activeItem.id);
+
+    setPrograms(newPrograms);
+    savePrograms(newPrograms);
   }
 
   function addSession(event: SubmitEvent) {
@@ -155,12 +205,10 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
       ...getDefaultSession(),
       title: value
     };
-    let newSessions = sessions.concat(session);
-    newSessions = selectSession(newSessions, session.id);
+    const newSessions = sessions.concat(session);
 
     formElement.reset();
-    setSessions(newSessions);
-    saveSessions(newSessions);
+    selectItem(session.id, newSessions, programs);
     closeModal();
   }
 
@@ -189,24 +237,96 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
     closeModal();
   }
 
+  function addProgram(event: SubmitEvent, items: (FormSession | Break)[]) {
+    event.preventDefault();
+
+    interface FormElements extends HTMLFormControlsCollection {
+      title: HTMLInputElement;
+    }
+
+    const formElement = event.target as HTMLFormElement;
+    const elements = formElement.elements as FormElements;
+
+    const { title } = elements;
+    const value = title.value.trim();
+    const program = {
+      ...getDefaultProgram(),
+      title: value,
+      items: items.map((item) => {
+        if (item.type === "session") {
+          return { type: item.type, id: item.id, title: item.title };
+        }
+        return item;
+      })
+    };
+
+    const newPrograms = programs.concat(program);
+
+    formElement.reset();
+    selectItem(program.id, sessions, newPrograms);
+    closeModal();
+  }
+
+  function editProgram(event: SubmitEvent, items: (FormSession | Break)[], id: string) {
+    event.preventDefault();
+
+    interface FormElements extends HTMLFormControlsCollection {
+      title: HTMLInputElement;
+    }
+
+    const formElement = event.target as HTMLFormElement;
+    const elements = formElement.elements as FormElements;
+
+    const { title } = elements;
+    const value = title.value.trim();
+    const index = programs.findIndex(program => program.id === id);
+
+    const newPrograms = programs.with(index, {
+      ...programs[index],
+      title: value,
+      items: items.map((item) => {
+        if (item.type === "session") {
+          return { type: item.type, id: item.id, title: item.title };
+        }
+        return item;
+      })
+    });
+
+    formElement.reset();
+    setPrograms(newPrograms);
+    savePrograms(newPrograms);
+    closeModal();
+  }
+
+  function savePrograms(programs: Program[]) {
+    localStorage.setItem("programs", JSON.stringify(programs));
+  }
+
   function saveSessions(sessions: FormSession[]) {
     localStorage.setItem("sessions", JSON.stringify(sessions));
   }
 
-  function showModal() {
-    if (modalRef.current) {
-      modalRef.current.showModal();
-    }
+  function showModal(type: "session" | "program", props?: Record<string, unknown>) {
+    setModal({ type, ...props });
+
+    requestAnimationFrame(() => {
+      if (type === "session" && sessionModalRef.current) {
+        sessionModalRef.current.showModal();
+      }
+      else if (type === "program" && programModalRef.current) {
+        programModalRef.current.showModal();
+      }
+    });
   }
 
   function closeModal() {
-    if (modalRef.current) {
-      modalRef.current.close();
-    }
     setModal(null);
   }
 
   function togglePreferences() {
+    if (activeItem?.type === "program") {
+      return;
+    }
     const newState = !preferencesHidden;
     setPreferencesHidden(newState);
     localStorage.setItem("preferencesHidden", newState ? "1" : "0");
@@ -214,26 +334,26 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
 
   return (
     <>
-      <form className={`container bottom-bar ${preferencesHidden ? "hidden" : ""}`} onSubmit={handleFormSubmit} ref={formRef}>
+      <form className={`container bottom-bar ${preferencesHidden ? "hidden" : ""}`} onSubmit={event => { handleFormSubmit(event, activeItem); }} ref={formRef}>
         <div className="bottom-bar-left">
           <div className="bottom-bar-left-header">
             <h3 className="bottom-bar-title">
-              <button type="button" className="btn text-btn text-btn-alt bottom-bar-title-btn" onClick={togglePreferences}>Preferences</button>
+              <button type="button" className="btn text-btn text-btn-alt bottom-bar-title-btn" onClick={togglePreferences} disabled={activeItem?.type === "program"}>Preferences</button>
             </h3>
             <SessionSelection
-              activeSession={activeSession} sessions={sessions}
-              enableSessionTitleEdit={enableSessionTitleEdit}
-              selectTimerWithState={selectTimerWithState} removeSession={removeSession} showModal={showModal}>
+              activeItem={activeItem} sessions={sessions} programs={programs}
+              enableItemEdit={enableItemEdit}
+              selectItem={selectItem} removeSession={removeSession} removeProgram={removeProgram} showModal={showModal}>
             </SessionSelection>
           </div>
-          <div className="bottom-bar-left-content">
+          {activeItem?.type === "session" && <div className="bottom-bar-left-content">
             <label className="bottom-bar-form-label">
               <span>Size</span>
-              <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.count} onChange={handleInputChange} name="count" />
+              <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={(activeItem as FormSession).count} onChange={handleInputChange} name="count" />
             </label>
             <label className="checkbox-container bottom-bar-form-label">
               <span>Randomize</span>
-              <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomize} onChange={handleInputChange} name="randomize" />
+              <input className="sr-only checkbox-input" type="checkbox" checked={(activeItem as FormSession).randomize} onChange={handleInputChange} name="randomize" />
               <div className="checkbox">
                 <div className="checkbox-tick"></div>
               </div>
@@ -241,7 +361,7 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
             <label className="bottom-bar-form-label">
               <span>Duration</span>
               <div className="select-container">
-                <select className="input select bottom-bar-duration-input" onChange={handleSelectChange} value={activeSession.customDuration ? "custom" : activeSession.duration} name="durationSelect">
+                <select className="input select bottom-bar-duration-input" onChange={handleSelectChange} value={(activeItem as FormSession).customDuration ? "custom" : (activeItem as FormSession).duration} name="durationSelect">
                   <option value="30">30 sec</option>
                   <option value="60">1 min</option>
                   <option value="120">2 min</option>
@@ -254,22 +374,22 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
                   <option value="custom">Custom (sec)</option>
                 </select>
               </div>
-              {activeSession.customDuration && (
-                <input type="number" className="input bottom-bar-duration-input bottom-bar-duration-custom-input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.duration} onChange={handleInputChange} name="duration" />
+              {(activeItem as FormSession).customDuration && (
+                <input type="number" className="input bottom-bar-duration-input bottom-bar-duration-custom-input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={(activeItem as FormSession).duration} onChange={handleInputChange} name="duration" />
               )}
             </label>
             <label className="checkbox-container bottom-bar-form-label">
               <span>Randomize flip</span>
-              <input className="sr-only checkbox-input" type="checkbox" checked={activeSession.randomizeFlip} onChange={handleInputChange} name="randomizeFlip" />
+              <input className="sr-only checkbox-input" type="checkbox" checked={(activeItem as FormSession).randomizeFlip} onChange={handleInputChange} name="randomizeFlip" />
               <div className="checkbox">
                 <div className="checkbox-tick"></div>
               </div>
             </label>
             <label className="bottom-bar-form-label">
               <span>Grace period</span>
-              <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={activeSession.grace} onChange={handleInputChange} name="grace" />
+              <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={(activeItem as FormSession).grace} onChange={handleInputChange} name="grace" />
             </label>
-          </div>
+          </div>}
         </div>
         <div className="bottom-bar-right">
           <span className="bottom-bar-image-count">{imageCount} image(s){selected === imageCount ? null : `, ${selected} selected`}</span>
@@ -286,7 +406,8 @@ export default function BottomBar({ uploading, imageCount, selected, formRef, ha
           {selected === imageCount ? null : <button type="button" className="btn text-btn" onClick={resetSelected}>Reset</button>}
         </div>
       </form>
-      <NewSessionModal modal={modal} addSession={addSession} editSesison={editSesison} closeModal={closeModal} ref={modalRef} />
+      {modal?.type === "session" && <NewSessionModal modal={modal} addSession={addSession} editSesison={editSesison} close={closeModal} ref={sessionModalRef} />}
+      {modal?.type === "program" && <ProgramModal modal={modal} sessions={sessions} addProgram={addProgram} editProgram={editProgram} close={closeModal} ref={programModalRef} />}
     </>
   );
 }

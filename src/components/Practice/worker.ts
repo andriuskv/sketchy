@@ -33,7 +33,8 @@ function countdown(elapsed: number) {
   const adjustedInterval = interval - diff;
 
   elapsed += interval;
-  params.duration -= adjustedInterval;
+  // params.duration -= adjustedInterval;
+  params.duration -= interval;
 
   timeoutId = self.setTimeout(() => {
     postMessage({ elapsed, ...params });

@@ -67,7 +67,8 @@ svg {
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5 {
   margin-top: 0;
   margin-bottom: 0;
   font-weight: normal;
@@ -244,13 +245,9 @@ textarea {
 
     border-color: transparent;
 
-    &::before {
+    &:not(:disabled)::before {
       opacity: 1;
       scale: 1.2;
-    }
-
-    &:disabled {
-      --background-color: transparent;
     }
   }
 
