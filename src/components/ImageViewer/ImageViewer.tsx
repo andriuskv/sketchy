@@ -450,7 +450,7 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
         </div>
       )}
       <div className="viewer-image-container">
-        <img src={image.url} className="viewer-image" onLoad={handleImageLoad} draggable="false" ref={imageRef} />
+        <img src={image.url} className="viewer-image" onLoad={handleImageLoad} draggable="false" ref={imageRef} key={image.index} />
       </div>
       {hideControls ? null : (
         <div className="viewer-bar viewer-bottom-bar">

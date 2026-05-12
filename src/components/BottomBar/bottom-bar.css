@@ -57,7 +57,6 @@
   font-weight: normal;
 }
 
-
 .bottom-bar-left {
   display: flex;
   flex-direction: column;
@@ -98,7 +97,7 @@
 }
 
 .bottom-bar-duration-input {
-  width: 112px;
+  width: 120px;
 }
 
 .bottom-bar-duration-custom-input {
@@ -118,6 +117,7 @@
   font-size: var(--text-md);
   text-wrap-style: balance;
   text-align: end;
+  white-space: nowrap;
 }
 
 .bottom-bar-right-buttons {

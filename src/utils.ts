@@ -23,8 +23,29 @@ function getRandomString(length = 8) {
   return Math.random().toString(32).slice(2, 2 + length);
 }
 
+function formatDuration(totalSeconds: number, showHours = false) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (showHours) {
+    return `${padTime(hours)}:${padTime(minutes)}:${padTime(seconds)}`;
+  }
+  return `${padTime(minutes)}:${padTime(seconds)}`;
+}
+
+function padTime(time: number | string, pad = true) {
+  return pad ? `00${time}`.slice(-2) : time.toString();
+}
+
+async function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export {
   shuffleArray,
   yieldWork,
-  getRandomString
+  getRandomString,
+  formatDuration,
+  delay
 }

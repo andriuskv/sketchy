@@ -1,3 +1,5 @@
+import { delay } from "@/utils";
+
 let thumbs: {
   [name: string]: {
     url?: string;
@@ -253,7 +255,7 @@ function sortBySortingValue(images: Image[], sortBy: string, sortOrder: number) 
 }
 
 function getThumb(name: string) {
-  if (thumbs[name]) {
+  if (thumbs[name] && !thumbs[name].loading) {
     return thumbs[name];
   }
 }
@@ -293,9 +295,23 @@ async function convertImageToPng(name: string): Promise<Blob | undefined | null>
   })
 }
 
+async function retryGetThumb(name: string, attempt: number = 0, maxAttempts: number = 3) {
+  const thumb = getThumb(name);
+
+  if (thumb) {
+    return thumb;
+  }
+
+  if (attempt < maxAttempts) {
+    await delay(100 * (attempt + 1));
+    return retryGetThumb(name, attempt + 1, maxAttempts);
+  }
+  return null;
+}
+
 async function generateThumb(image: Image) {
   if (thumbs[image.name]?.loading) {
-    return;
+    return retryGetThumb(image.name);
   }
   thumbs[image.name] = { loading: true };
 

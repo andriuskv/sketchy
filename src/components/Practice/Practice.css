@@ -1,9 +1,28 @@
-.session {
+.practice {
   width: 100%;
   height: 100%;
 }
 
-.session-bar-progress-container {
+.practice-starting-title {
+  margin-bottom: var(--space-md);
+  font-size: var(--text-xl);
+  text-align: center;
+}
+
+.practice-starting-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.practice-starting-info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.practice-bar-progress-container {
   z-index: 3;
   position: absolute;
   top: var(--space-xs);
@@ -12,7 +31,7 @@
   flex-shrink: 0;
 }
 
-.session-bar-progress-bar {
+.practice-bar-progress-bar {
   width: 100%;
   height: 2px;
   background-color: var(--color-primary);
@@ -20,7 +39,7 @@
   transition: 0.1s scale;
 }
 
-.session-grace {
+.practice-grace {
   z-index: 1;
   position: absolute;
   inset: 0;
@@ -38,11 +57,11 @@
   }
 }
 
-.session-grace-value {
+.practice-grace-value {
   font-size: var(--text-3xl);
 }
 
-.session-paused {
+.practice-paused {
   z-index: 1;
   position: absolute;
   inset: 0;
@@ -54,12 +73,12 @@
   backdrop-filter: blur(16px) grayscale(100%);
 }
 
-.session-paused-title {
+.practice-paused-title {
   font-size: var(--text-4xl);
   text-align: center;
 }
 
-.session-paused-buttons {
+.practice-paused-buttons {
   align-self: start;
   display: flex;
   flex-direction: column;

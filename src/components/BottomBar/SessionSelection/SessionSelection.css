@@ -22,3 +22,20 @@
     }
   }
 }
+
+.bottom-bar-dropdown {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  right: auto;
+  left: var(--space-xs);
+}
+
+.dropdown-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-bottom {
+  margin-top: auto;
+  border-top: 1px solid light-dark(var(--color-black-4), var(--color-white-10));
+}
