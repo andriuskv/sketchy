@@ -1,4 +1,5 @@
 .bottom-bar {
+  z-index: 1;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -14,27 +15,6 @@
   border: 1px solid var(--color-white-4);
   background-color: light-dark(var(--color-grey-10), var(--color-grey-40));
   box-shadow: var(--fg-shadow);
-  transition: transform 0.2s;
-
-  &.hidden {
-    padding-top: 8px;
-    transform: translateY(calc(100% - 54px));
-
-    .bottom-bar-left-header {
-      padding-top: 4px;
-    }
-
-    .bottom-bar-left-content {
-      visibility: hidden;
-      opacity: 0;
-    }
-
-    .bottom-bar-right {
-      flex-direction: row;
-      align-self: flex-start;
-      align-items: center;
-    }
-  }
 
   @supports (corner-shape: squircle) {
     border-top-left-radius: 48px;
@@ -42,66 +22,11 @@
   }
 }
 
-.bottom-bar-left-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.bottom-bar-title {
-  font-size: var(--text-xl);
-}
-
-.bottom-bar-title-btn {
-  font-size: inherit;
-  font-weight: normal;
-}
-
 .bottom-bar-left {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-}
-
-.bottom-bar-left-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.bottom-bar-form-label {
-  display: grid;
-  align-items: center;
-  grid-template-columns: 120px 54px;
-  gap: var(--space-md);
-
-  .checkbox {
-    justify-self: center;
-  }
-
-  .input {
-    text-align: center;
-    appearance: none;
-    -moz-appearance: textfield;
-
-    &::-webkit-outer-spin-button,
-    &::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    &:user-invalid {
-      outline: 2px solid var(--color-negative);
-    }
-  }
-}
-
-.bottom-bar-duration-input {
-  width: 120px;
-}
-
-.bottom-bar-duration-custom-input {
-  grid-column: 2 / 3;
+  min-width: 0;
 }
 
 .bottom-bar-right {

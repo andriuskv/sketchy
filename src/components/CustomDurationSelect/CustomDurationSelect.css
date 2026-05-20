@@ -1,0 +1,57 @@
+.select-container.custom {
+  position: relative;
+  display: flex;
+  gap: var(--space-sm);
+  background-color: light-dark(var(--color-black-4), var(--color-white-10));
+  corner-shape: squircle;
+  border-radius: 16px;
+  padding-left: var(--space-xs);
+  height: 26px;
+
+  .svg-icon {
+    corner-shape: squircle;
+    border-radius: 8px;
+    margin: var(--space-sm);
+
+    &:has(+ select:focus-visible) {
+      outline: 2px solid var(--color-primary);
+    }
+  }
+
+  .input:not(.select) {
+    --background-color: transparent;
+
+    width: 60px;
+    border: none;
+    text-align: center;
+    appearance: none;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &:user-invalid {
+      outline: 2px solid var(--color-negative);
+    }
+  }
+
+  .select {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 26px;
+    height: 26px;
+    opacity: 0;
+    cursor: pointer;
+    appearance: none;
+    -moz-appearance: textfield;
+  }
+}
+
+.custom-duration-select {
+  appearance: base-select;
+  width: 88px;
+}

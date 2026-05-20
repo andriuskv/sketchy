@@ -1,5 +1,5 @@
-import { useState, useRef, type ChangeEvent, type DragEvent, type SubmitEvent } from "react";
-import { getRandomString, shuffleArray } from "@/utils";
+import { useState, type ChangeEvent, type DragEvent } from "react";
+import { shuffleArray } from "@/utils";
 import * as filesService from "services/files";
 import Practice from "components/Practice/Practice";
 import ImageList from "components/ImageList/ImageList";
@@ -7,61 +7,34 @@ import BottomBar from "components/BottomBar/BottomBar";
 import Splash from "components/Splash/Splash";
 import Icon from "components/Icon/Icon";
 import ImageViewer from "./ImageViewer/ImageViewer";
+import { getDefaultSession } from "@/helpers";
+import Tooltip from "./Tooltip";
 
-// TODO: move pref validation to bottom bar
-function getSessions(): FormSession[] {
-  const sessions = localStorage.getItem("sessions");
-
-  return sessions ? JSON.parse(sessions) : [getDefaultSession()];
+function findActiveItem(sessions: FormSession[], programs: Program[]): FormSession | Program {
+  return (sessions.find(session => session.active) || programs.find(program => program.active))!;
 }
-
-function getPrograms(): Program[] {
-  const programs = localStorage.getItem("programs");
-
-  return programs ? JSON.parse(programs) : [];
-}
-
-function getDefaultSession(): FormSession {
-  return {
-    type: "session",
-    title: "Default",
-    id: getRandomString(4),
-    count: 10,
-    randomize: true,
-    randomizeFlip: false,
-    duration: 180,
-    customDuration: false,
-    grace: 5,
-    active: false
-  };
-}
-
-// TODO: temp for now, need to rewrite bottom bar and session form
-function getActiveItem(): FormSession | Program {
-  const sessions = getSessions();
-  const programs = getPrograms();
-  const session = sessions.find(session => session.active);
-
-  if (session) {
-    return session;
-  }
-  const program = programs.find(program => program.active);
-
-  if (program) {
-    return program;
-  }
-  return getDefaultSession();
-}
-
 
 function App() {
+  const [sessions, setSessions] = useState<FormSession[]>(() => {
+    const sessions = localStorage.getItem("sessions");
+
+    return sessions ? JSON.parse(sessions).map((session: FormSession) => ({
+      ...session,
+      type: "session"
+    })) : [getDefaultSession()];
+  });
+  const [programs, setPrograms] = useState<Program[]>(() => {
+    const programs = localStorage.getItem("programs");
+
+    return programs ? JSON.parse(programs) : [];
+  });
+  const activeItem = findActiveItem(sessions, programs) || sessions[0];
   const [images, setImages] = useState<Image[]>([]);
   const [practice, setPractice] = useState<Practice | null>(null);
   const [sortOptions, setSortOptions] = useState({ sortBy: "default", sortOrder: 1 });
   const seletedImageCount = images.filter(image => image.selected).length;
   const [uploading, setUploading] = useState(false);
   const [viewerImage, setViewerImage] = useState<{ index: number } | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
 
   async function handleDrop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -87,7 +60,7 @@ function App() {
       const startImmediately = localStorage.getItem("startImmediately");
 
       if (startImmediately) {
-        startPractice(formRef.current!, getActiveItem(), updatedImages);
+        startPractice(activeItem, updatedImages);
       }
     } catch (e) {
       console.log(e);
@@ -106,7 +79,7 @@ function App() {
       const startImmediately = localStorage.getItem("startImmediately");
 
       if (startImmediately) {
-        startPractice(formRef.current!, getActiveItem(), updatedImages);
+        startPractice(activeItem, updatedImages);
       }
     } catch (e) {
       console.log(e);
@@ -127,65 +100,32 @@ function App() {
     const startImmediately = localStorage.getItem("startImmediately");
 
     if (startImmediately) {
-      startPractice(formRef.current!, getActiveItem(), updatedImages);
+      startPractice(activeItem, updatedImages);
     }
   }
 
-  function buildSessionPractice(formElement: HTMLFormElement, images: Image[], imageCache: Record<string, number>, item: FormSession | null): Practice | undefined {
-    interface FormElements extends HTMLFormControlsCollection {
-      count: HTMLInputElement;
-      randomize: HTMLInputElement;
-      randomizeFlip: HTMLInputElement;
-      duration: HTMLInputElement;
-      durationSelect: HTMLSelectElement;
-      grace: HTMLInputElement;
-    }
-
-    const elements = formElement.elements as FormElements;
-    const { count, randomize, randomizeFlip, duration, durationSelect, grace } = elements;
+  function buildSessionPractice(item: FormSession, images: Image[], imageCache: Record<string, number>): Practice | undefined {
     const seletedImages = images.filter(image => image.selected);
-    let sessionImages = randomize.checked ?
-      shuffleArray(seletedImages).slice(0, parseInt(count.value, 10)) :
-      seletedImages.slice(0, parseInt(count.value, 10));
+    let sessionImages = item.randomize ?
+      shuffleArray(seletedImages).slice(0, item.count) :
+      seletedImages.slice(0, item.count);
 
     if (!sessionImages.length) {
       throw new Error("Session must have at least one image");
     }
     sessionImages = sessionImages.map(image => ({
       ...image,
-      mirrored: randomizeFlip.checked ? Math.random() > 0.5 : false,
+      mirrored: item.randomizeFlip ? Math.random() > 0.5 : false,
       count: imageCache[image.name] ? imageCache[image.name] + 1 : 1
     }));
-    let durationValue = 0;
-
-    if (durationSelect.value === "custom") {
-      durationValue = parseInt(duration.value, 10);
-    }
-    else {
-      durationValue = parseInt(durationSelect.value, 10);
-    }
-
-    const preferences = {
-      id: crypto.randomUUID(),
-      count: parseInt(count.value, 10),
-      randomize: randomize.checked,
-      randomizeFlip: randomizeFlip.checked,
-      duration: durationValue * 1000,
-      grace: parseInt(grace.value, 10) * 1000,
-    };
-
-    if (preferences.count < 1 || preferences.duration < 1 || preferences.grace < 1) {
-      throw new Error("Session must have a duration and grace period of at least 1 second");
-    }
-
-    localStorage.setItem("preferences", JSON.stringify(preferences));
 
     return {
       id: crypto.randomUUID(),
       items: [{
-        ...preferences,
+        ...item,
         type: "session",
-        title: item?.title,
+        duration: item.duration * 1000,
+        grace: item.grace * 1000,
         images: sessionImages
       } as PracticeSession]
     };
@@ -194,7 +134,6 @@ function App() {
   function buildProgramPractice(program: Program, images: Image[], imageCache: Record<string, number>): Practice | undefined {
     const seletedImages = images.filter(image => image.selected);
     const items = [];
-    const sessions = getSessions();
 
     for (const item of program.items) {
       if (item.type === "session") {
@@ -209,10 +148,6 @@ function App() {
 
         if (!sessionImages.length) {
           throw new Error(`Session "${session.title}" must have at least one image`);
-        }
-
-        if (session.count < 1 || session.duration < 1 || session.grace < 1) {
-          throw new Error(`Session "${session.title}" must have a duration and grace period of at least 1 second`);
         }
         sessionImages = sessionImages.map(image => ({
           ...image,
@@ -242,19 +177,18 @@ function App() {
     };
   }
 
-
-  function startPractice(formElement: HTMLFormElement, item: FormSession | Program | null, images: Image[]) {
+  function startPractice(item: FormSession | Program, imageList: Image[] = images) {
     const imageCache = JSON.parse(localStorage.getItem("imageCache")!) || {};
     let practice: Practice | undefined;
 
-    if (!item || item.type === "session") {
-      practice = buildSessionPractice(formElement, images, imageCache, item);
+    if (item.type === "session") {
+      practice = buildSessionPractice(item, imageList, imageCache);
 
       if (!practice) {
         return;
       }
     } else {
-      practice = buildProgramPractice(item, images, imageCache);
+      practice = buildProgramPractice(item, imageList, imageCache);
 
       if (!practice) {
         return;
@@ -263,7 +197,7 @@ function App() {
 
     setPractice(practice);
 
-    let newImages = images;
+    let newImages = imageList;
 
     for (const item of practice.items) {
       if (item.type === "session") {
@@ -276,11 +210,6 @@ function App() {
     }
     setImages(newImages);
     localStorage.setItem("imageCache", JSON.stringify(imageCache));
-  }
-
-  function handleFormSubmit(event: SubmitEvent, item: FormSession | Program | null) {
-    event.preventDefault();
-    startPractice(event.target as HTMLFormElement, item, images);
   }
 
   function quitPractice() {
@@ -449,7 +378,8 @@ function App() {
         <ImageList images={images} handleImageSelection={(event, name) => handleImageSelection(event, name)} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} resetImageCache={resetImageCache} /> :
         <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
       }
-      <BottomBar uploading={uploading} imageCount={images.length} selected={seletedImageCount} handleFormSubmit={handleFormSubmit} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} formRef={formRef} />
+      <BottomBar sessions={sessions} programs={programs} activeItem={activeItem} uploading={uploading} imageCount={images.length} selected={seletedImageCount} setSessions={setSessions} setPrograms={setPrograms} startPractice={startPractice} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
+      <Tooltip />
     </div>
   );
 }

@@ -1,11 +1,14 @@
 import { useState, type RefObject, type SubmitEvent } from "react";
 import "./ProgramModal.css";
 import Icon from "@/components/Icon/Icon";
-import { formatDuration, getRandomString } from "@/utils";
+import { getRandomString } from "@/utils";
+import SessionInfo from "@/components/SessionInfo/SessionInfo";
+import Modal from "@/components/Modal/Modal";
+import CustomDurationSelect from "@/components/CustomDurationSelect/CustomDurationSelect";
 
 type Props = {
   sessions: FormSession[],
-  modal: { type: "session" | "program" } & Record<string, unknown> | null,
+  modal: { type: "session" | "program" } & Record<string, unknown>,
   addProgram: (event: SubmitEvent, selectedSessions: (FormSession | Break)[]) => void,
   editProgram: (event: SubmitEvent, selectedSessions: (FormSession | Break)[], id: string) => void,
   close: () => void,
@@ -21,9 +24,43 @@ function cleanSelectedSession(s: SelectedSession | Break) {
   return session;
 }
 
+type BreakItemProps = {
+  item: Break | SelectedSession,
+  index: number,
+  insertBreak: (index: number) => void,
+  removeBreak: (id: string) => void,
+  handleSelectChange: (id: string, value: string) => void,
+  handleInputChange: (id: string, duration: number) => void
+}
+
+function BreakItem({ item, index, insertBreak, removeBreak, handleSelectChange, handleInputChange }: BreakItemProps) {
+  if (index === 0) {
+    return null;
+  }
+
+  if (item.type === "session") {
+    return (
+      <button type="button" className="btn icon-btn add-break-btn" title="Add break" onClick={() => insertBreak(index)}>
+        <Icon id="plus" />
+      </button>
+    )
+  }
+
+  if (item.type === "break") {
+    return (
+      <div className="program-modal-selected-session-break">
+        <CustomDurationSelect value={item.duration} custom={item.customDuration} handleSelectChange={(event) => handleSelectChange(item.id, event.target.value)} handleInputChange={(event) => handleInputChange(item.id, Number(event.target.value))} />
+        <button type="button" className="btn icon-btn" title="Remove break" onClick={() => removeBreak(item.id)}>
+          <Icon id="minus" />
+        </button>
+      </div>
+    )
+  }
+}
+
 export default function ProgramModal({ modal, sessions, addProgram, editProgram, close, ref }: Props) {
   const [selectedSessions, setSelectedSessions] = useState<(SelectedSession | Break)[]>(() => {
-    if (modal?.items) {
+    if (modal.items) {
       return (modal.items as (SelectedSession | Break)[]).map(item => {
         if (item.type === "break") {
           return item;
@@ -44,7 +81,7 @@ export default function ProgramModal({ modal, sessions, addProgram, editProgram,
 
   function localEditProgram(event: SubmitEvent) {
     event.preventDefault();
-    editProgram(event, selectedSessions.map(cleanSelectedSession), modal?.id as string);
+    editProgram(event, selectedSessions.map(cleanSelectedSession), modal.id as string);
   }
 
   function addSessionToProgram(id: string) {
@@ -104,60 +141,18 @@ export default function ProgramModal({ modal, sessions, addProgram, editProgram,
     setSelectedSessions(selectedSessions.map(session => session.id === id ? { ...session, duration } : session));
   }
 
-  function renderBreakSelect(breakData: Break) {
-    return (
-      <div className="program-modal-break-duration-container">
-        <div className={`select-container ${breakData.customDuration ? "custom-duration" : ""}`}>
-          {breakData.customDuration && (
-            <button type="button" className="btn icon-btn">
-              <Icon id="menu" />
-            </button>
-          )}
-          <select className="input select program-modal-break-duration-select" onChange={(event) => handleBreakDurationChange(breakData.id, event.target.value)} value={breakData.customDuration ? "custom" : breakData.duration} name="durationSelect">
-            <option value="30">30 sec</option>
-            <option value="60">1 min</option>
-            <option value="120">2 min</option>
-            <option value="180">3 min</option>
-            <option value="300">5 min</option>
-            <option value="600">10 min</option>
-            <option value="900">15 min</option>
-            <option value="1800">30 min</option>
-            <option value="3600">1 hour</option>
-            <option value="custom">Custom (sec)</option>
-          </select>
-        </div>
-        {
-          breakData.customDuration && (
-            <input type="number" className="input" inputMode="numeric" pattern="\d*" min="1" autoComplete="off" required value={breakData.duration} onChange={(event) => handleBreakCustomDurationChange(breakData.id, Number(event.target.value))} name="duration" />
-          )
-        }
-      </div>
-    )
-  }
-
   return (
-    <dialog className="modal program-modal" ref={ref}>
-      <form className="session-form" onSubmit={modal?.id ? localEditProgram : localAddProgram}>
+    <Modal className="program-modal" ref={ref} close={close}>
+      <form className="session-form" onSubmit={modal.id ? localEditProgram : localAddProgram}>
         <h4 className="modal-title">Program</h4>
-        <input type="text" className="input" required name="title" autoComplete="off" defaultValue={modal?.title as string | undefined} placeholder="Enter title..." />
-        <div className="session-form-session-select">
+        <input type="text" className="input" required name="title" autoComplete="off" defaultValue={modal.title as string | undefined} placeholder="Enter title..." />
+        <div>
           <h5>Selected sessions</h5>
           <ul className="program-modal-selected-sessions">
             {selectedSessions.map((session, index) => (
               session.type === "session" ? (
                 <li className="program-modal-selected-session" key={session.listId}>
-                  {index > 0 && selectedSessions[index - 1].type === "session" ? (
-                    <button type="button" className="btn icon-btn add-break-btn" title="Add break" onClick={() => insertBreak(index)}>
-                      <Icon id="plus" />
-                    </button>
-                  ) : index > 0 && selectedSessions[index - 1].type === "break" ? (
-                    <div className="program-modal-selected-session-break">
-                      {renderBreakSelect(selectedSessions[index - 1] as Break)}
-                      <button type="button" className="btn icon-btn" title="Remove break" onClick={() => removeBreak(selectedSessions[index - 1].id)}>
-                        <Icon id="minus" />
-                      </button>
-                    </div>
-                  ) : null}
+                  <BreakItem item={selectedSessions[index - 1]} index={index} insertBreak={insertBreak} removeBreak={removeBreak} handleSelectChange={handleBreakDurationChange} handleInputChange={handleBreakCustomDurationChange} />
                   <div>
                     <button type="button" className="btn icon-btn" title="Move up" onClick={() => changeOrder(-1, session.listId)} disabled={index === 0}>
                       <Icon id="chevron-up" />
@@ -175,9 +170,9 @@ export default function ProgramModal({ modal, sessions, addProgram, editProgram,
             ))}
           </ul>
         </div>
-        <div className="session-form-session-select">
+        <div>
           <h5>Available sessions</h5>
-          <ul className="session-form-select">
+          <ul className="program-modal-available-sessions">
             {sessions.map(session => (
               <li className="program-modal-available-session" key={session.id}>
                 <div className="program-modal-available-session-header">
@@ -186,26 +181,7 @@ export default function ProgramModal({ modal, sessions, addProgram, editProgram,
                     <Icon id="plus" />
                   </button>
                 </div>
-                <div className="program-modal-available-session-info">
-                  <div className="program-modal-available-session-info-item">
-                    <Icon id="image" title="Images" size="16px"></Icon>
-                    <div className="session-form-program-session-size">{session.count}</div>
-                  </div>
-                  {session.randomize ? (
-                    <Icon id="shuffle" className="program-modal-available-session-info-item" title="Randomize" size="16px"></Icon>
-                  ) : null}
-                  <div className="program-modal-available-session-info-item">
-                    <Icon id="clock" title="Duration" size="16px"></Icon>
-                    <div className="session-form-program-session-time">{formatDuration(session.duration)}</div>
-                  </div>
-                  {session.randomizeFlip ? (
-                    <Icon id="mirror" className="program-modal-available-session-info-item" title="Randomize flip" size="16px"></Icon>
-                  ) : null}
-                  <div className="program-modal-available-session-info-item">
-                    <Icon id="sleep" title="Grace period" size="16px"></Icon>
-                    <div className="session-form-program-session-cycles">{formatDuration(session.grace)}</div>
-                  </div>
-                </div>
+                <SessionInfo item={session} />
               </li>
             ))}
           </ul>
@@ -215,6 +191,6 @@ export default function ProgramModal({ modal, sessions, addProgram, editProgram,
           <button type="submit" className="btn">Confirm</button>
         </div>
       </form>
-    </dialog>
+    </Modal>
   );
 }

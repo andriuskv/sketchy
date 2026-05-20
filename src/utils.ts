@@ -23,7 +23,7 @@ function getRandomString(length = 8) {
   return Math.random().toString(32).slice(2, 2 + length);
 }
 
-function formatDuration(totalSeconds: number, showHours = false) {
+function formatDuration(totalSeconds: number, showHours = totalSeconds >= 3600) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
@@ -42,10 +42,20 @@ async function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function timeout(callback: () => void, duration: number, id?: number) {
+  if (id) {
+    window.clearTimeout(id);
+  }
+  id = window.setTimeout(callback, duration);
+
+  return id;
+}
+
 export {
   shuffleArray,
   yieldWork,
   getRandomString,
   formatDuration,
-  delay
+  delay,
+  timeout
 }

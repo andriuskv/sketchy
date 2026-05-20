@@ -1,26 +1,31 @@
-.session-form-modal {
+.modal {
   border: none;
   box-shadow: var(--highligh-shadow);
   corner-shape: squircle;
   border-radius: 16px;
   background-color: light-dark(var(--color-white-90-100), var(--color-grey-40));
   color: inherit;
+  width: 320px;
+
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
+  }
 }
 
-.session-form-title {
+.modal-title {
   font-weight: bold;
   font-size: var(--text-lg);
   text-align: center;
 }
 
-.session-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-  padding: var(--space-md);
+.modal-error {
+  color: var(--color-negative);
+  font-size: var(--text-sm);
+  font-weight: bold;
 }
 
-.session-form-bottom {
+.modal-bottom {
   display: flex;
   justify-content: end;
   gap: var(--space-md);

@@ -3,10 +3,10 @@ import * as fileService from "services/files";
 import "./Practice.css";
 import EndPracticeView from "./EndPracticeView/EndPracticeView";
 import useWorker from "./useWorker";
-import ImageViewer from "../ImageViewer/ImageViewer";
+import ImageViewer from "components/ImageViewer/ImageViewer";
+import SessionInfo from "components/SessionInfo/SessionInfo";
 import * as pip from "../ImageViewer/picture-in-picture";
 import { formatDuration } from "@/utils";
-import Icon from "../Icon/Icon";
 
 type Props = {
   practice: Practice,
@@ -36,34 +36,6 @@ const CONTINUING = 1;
 const SKIPPING = 2;
 const LOADING = 3;
 
-function StartingInfo({ item }: { item: PracticeSession }) {
-  return (
-    <div className="practice-starting-splash">
-      <h2 className="practice-starting-title">{item.title}</h2>
-      <div className="practice-starting-info">
-        <div className="practice-starting-info-item">
-          <Icon id="image" title="Images" size="16px"></Icon>
-          <div className="practice-form-program-session-size">{item.count}</div>
-        </div>
-        {item.randomize ? (
-          <Icon id="shuffle" className="practice-starting-info-item" title="Randomize" size="16px"></Icon>
-        ) : null}
-        <div className="practice-starting-info-item">
-          <Icon id="clock" title="Duration" size="16px"></Icon>
-          <div className="practice-form-program-session-time">{formatDuration(Math.round(item.duration / 1000))}</div>
-        </div>
-        {item.randomizeFlip ? (
-          <Icon id="mirror" className="practice-starting-info-item" title="Randomize flip" size="16px"></Icon>
-        ) : null}
-        <div className="practice-starting-info-item">
-          <Icon id="sleep" title="Grace period" size="16px"></Icon>
-          <div className="practice-form-program-session-cycles">{formatDuration(Math.round(item.grace / 1000))}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function GraceView({ item, state, skipWaiting, endPractice }: { item: PracticeSession, state: State, skipWaiting: () => void, endPractice: () => void }) {
   const graceWhole = Math.round(state.grace / 1000);
   let gracePretty = graceWhole.toString();
@@ -75,7 +47,12 @@ function GraceView({ item, state, skipWaiting, endPractice }: { item: PracticeSe
     <div className="practice-grace">
       <div className="practice-grace-text">{state.stateText}</div>
       <div className="practice-grace-value">{gracePretty}</div>
-      {state.stateId === STARTING || state.afterBreak ? <StartingInfo item={item} /> : null}
+      {state.stateId === STARTING || state.afterBreak ? (
+        <div className="practice-starting-splash">
+          <h2 className="practice-starting-title">{item.title}</h2>
+          <SessionInfo item={item} timeInMs />
+        </div>
+      ) : null}
       {state.stateId === LOADING && item.grace >= 10 ? (
         <div className="practice-grace-btns">
           <button className={`btn text-btn${state.grace < item.grace - PAUSE_DURATION ? "" : " hidden"}`}

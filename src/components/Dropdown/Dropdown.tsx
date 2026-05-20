@@ -20,7 +20,8 @@ type Props = PropsWithChildren & {
   },
   body?: {
     className: string
-  }
+  },
+  hasNested?: boolean
 }
 
 type State = {
@@ -43,7 +44,7 @@ function getParentElement(element: HTMLElement | null) {
   return element || document.body;
 }
 
-export default function Dropdown({ container, toggle = {}, body, usePortal, children }: Props) {
+export default function Dropdown({ container, toggle = {}, body, usePortal, hasNested = false, children }: Props) {
   const [state, setState] = useState<State>(() => ({ id: getRandomString(), visible: false }));
   const isMounted = useRef(false);
   const drop = useRef<HTMLDivElement>(null);
@@ -76,6 +77,9 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
       if (!shouldHide && !element.closest(".dropdown")) {
         shouldHide = true;
       }
+    }
+    else if (hasNested && closestContainer?.parentElement?.closest(".dropdown-container")) {
+      shouldHide = !!(element.closest("a") || element.closest(".dropdown-btn") || element.closest("[data-dropdown-btn]") || element.closest("[data-dropdown-close]"));
     }
 
     if (shouldHide) {
@@ -161,11 +165,11 @@ export default function Dropdown({ container, toggle = {}, body, usePortal, chil
       <ToggleBtn params={toggle} toggleDropdown={toggleDropdown} ref={toggleBtn} visible={state.visible} />
       {usePortal && CSS.supports("anchor-name", "--test") ? (
         createPortal(
-          <div role="menu" className={`container container-opaque dropdown portal${body ? ` ${body.className}` : ""}${state.reveal ? " reveal" : ""}${state.visible ? " visible" : ""}${state.onTop ? " top" : ""}${state.hiding ? " hiding" : ""}`} style={{ "positionAnchor": `--anchor-${state.id}` } as CSSProperties} ref={drop}>{children}</div>,
+          <div role="menu" className={`dropdown portal${body ? ` ${body.className}` : ""}${state.reveal ? " reveal" : ""}${state.visible ? " visible" : ""}${state.onTop ? " top" : ""}${state.hiding ? " hiding" : ""}`} style={{ "positionAnchor": `--anchor-${state.id}` } as CSSProperties} ref={drop}>{children}</div>,
           document.body
         )
       ) : (
-        <div role="menu" className={`container container-opaque dropdown${body ? ` ${body.className}` : ""}${state.reveal ? " reveal" : ""}${state.visible ? " visible" : ""}${state.onTop ? " top" : ""}${state.hiding ? " hiding" : ""}`} ref={drop}>{children}</div>
+        <div role="menu" className={`dropdown${body ? ` ${body.className}` : ""}${state.reveal ? " reveal" : ""}${state.visible ? " visible" : ""}${state.onTop ? " top" : ""}${state.hiding ? " hiding" : ""}`} ref={drop}>{children}</div>
       )}
     </div>
   );

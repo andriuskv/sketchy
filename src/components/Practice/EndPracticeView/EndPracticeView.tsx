@@ -4,8 +4,8 @@ import ImageList from "components/ImageList/ImageList";
 import "./EndPracticeView.css";
 import ImageViewer from "@/components/ImageViewer/ImageViewer";
 import Dropdown from "@/components/Dropdown/Dropdown";
-import { formatDuration } from "@/utils";
 import ToTop from "@/components/ImageList/ToTop/ToTop";
+import SessionInfo from "@/components/SessionInfo/SessionInfo";
 
 type Props = {
   practice: Practice,
@@ -68,26 +68,7 @@ export default function EndPracticeView({ practice, toggleAllImages, handleImage
                     <div key={`${item.id}-${index}`} className="end-practice-image-list">
                       <div className="container end-practice-image-list-header">
                         <h3>{item.title}</h3>
-                        <div className="end-practice-image-list-header-info">
-                          <div className="end-practice-image-list-header-info-item">
-                            <Icon id="image" title="Images" size="16px"></Icon>
-                            <div>{item.count}/{item.images.filter(image => image.selected).length}</div>
-                          </div>
-                          {item.randomize ? (
-                            <Icon id="shuffle" className="end-practice-image-list-header-info-item" title="Randomize" size="16px"></Icon>
-                          ) : null}
-                          <div className="end-practice-image-list-header-info-item">
-                            <Icon id="clock" title="Duration" size="16px"></Icon>
-                            <div>{formatDuration(item.duration / 1000)}</div>
-                          </div>
-                          {item.randomizeFlip ? (
-                            <Icon id="mirror" className="end-practice-image-list-header-info-item" title="Randomize flip" size="16px"></Icon>
-                          ) : null}
-                          <div className="end-practice-image-list-header-info-item">
-                            <Icon id="sleep" title="Grace period" size="16px"></Icon>
-                            <div>{formatDuration(item.grace / 1000)}</div>
-                          </div>
-                        </div>
+                        <SessionInfo item={item} timeInMs />
                       </div>
                       <ImageList
                         images={item.images}
