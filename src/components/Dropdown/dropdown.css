@@ -8,7 +8,6 @@
 
 .dropdown {
   z-index: 1;
-  overflow: hidden;
   position: absolute;
   right: 0;
   display: none;
@@ -16,6 +15,7 @@
   min-width: 160px;
   padding: var(--space-md) 1px;
   background-color: light-dark(var(--color-white), var(--color-grey-30));
+  box-shadow: var(--fg-shadow);
   transform: translateY(var(--space-sm));
   white-space: nowrap;
   border-radius: 12px;
@@ -57,6 +57,7 @@
 .dropdown-group {
   display: flex;
   flex-direction: column;
+  gap: var(--space-sm);
 
   &:has(+ :where(.dropdown-group, .dropdown-btn)) {
     margin-bottom: var(--space-md);

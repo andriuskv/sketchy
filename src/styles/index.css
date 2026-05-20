@@ -132,6 +132,7 @@ textarea {
 
   background-color: var(--background-color);
   box-shadow: var(--fg-shadow);
+  font-size: var(--text-md);
 
   &:focus-visible {
     box-shadow:
@@ -416,6 +417,12 @@ textarea {
 
 .radio-label {
   margin-left: var(--space-md);
+}
+
+.select {
+  --background-color: light-dark(var(--color-white-10-100), var(--color-grey-30));
+
+  height: 26px;
 }
 
 .images-view {

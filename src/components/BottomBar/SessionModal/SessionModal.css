@@ -1,0 +1,66 @@
+.session-form-modal {
+  border: none;
+  box-shadow: var(--highligh-shadow);
+  corner-shape: squircle;
+  border-radius: 16px;
+  background-color: light-dark(var(--color-white-90-100), var(--color-grey-40));
+  color: inherit;
+}
+
+.session-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  padding: var(--space-md);
+}
+
+.session-form-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.session-form-label-wrapper {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 120px min-content;
+  gap: var(--space-md);
+  font-size: var(--text-md);
+
+  .checkbox {
+    justify-self: center;
+  }
+
+  >.input {
+    width: 54px;
+    text-align: center;
+    appearance: none;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &:user-invalid {
+      outline: 2px solid var(--color-negative);
+    }
+  }
+}
+
+.session-form-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-md);
+  opacity: 0.8;
+}
+
+.session-form-duration-input {
+  width: 120px;
+}
+
+.session-form-duration-custom-input {
+  grid-column: 2 / 3;
+}

@@ -1,0 +1,44 @@
+.program-info {
+  position: relative;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: var(--space-lg);
+  flex: 1;
+  overflow-x: clip;
+  white-space: nowrap;
+}
+
+.program-info-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+
+  &:not(:first-child)::before {
+    content: "\2022";
+    font-size: var(--text-md);
+  }
+}
+
+.program-info-item {
+  font-size: var(--text-md);
+  cursor: default;
+  user-select: none;
+  opacity: 0.8;
+}
+
+.program-info-item-tooltip-wrapper {
+  display: none;
+}
+
+.program-info-item-tooltip {
+  background-color: light-dark(var(--color-white), var(--color-grey-30));
+  padding: var(--space-md) var(--space-lg);
+  border-radius: 12px;
+  corner-shape: squircle;
+  box-shadow: var(--fg-shadow);
+  border: 1px solid light-dark(var(--color-black-8), var(--color-white-4));
+  user-select: none;
+  pointer-events: none;
+}

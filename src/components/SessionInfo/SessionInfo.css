@@ -1,0 +1,15 @@
+.session-info {
+  opacity: 0.8;
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  gap: var(--space-md);
+  flex: 1;
+}
+
+.session-info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-md);
+}

@@ -8,20 +8,37 @@ type Props = {
   programs: Program[],
   enableItemEdit: (id: string, type: "session" | "program") => void,
   selectItem: (id: string, sessions: FormSession[], programs: Program[]) => void,
-  removeSession: () => void,
-  removeProgram: () => void,
+  removeSession: (id: string) => void,
+  removeProgram: (id: string) => void,
   showModal: (type: "session" | "program") => void
+}
+
+function SessionRemoveButton({ sessions, programs, session, removeSession }: { sessions: FormSession[], programs: Program[], session: FormSession, removeSession: (id: string) => void }) {
+  const programWithSession = programs.find(program => program.items.some(item => item.id === session.id));
+
+  if (sessions.length === 1 && !programWithSession) {
+    return null;
+  }
+
+  return (
+    <button type="button" className="btn icon-text-btn dropdown-btn" onClick={() => removeSession(session.id)} disabled={!!programWithSession} title={programWithSession ? `Session is used in "${programWithSession.title}"` : ""}>
+      <Icon id="trash" />
+      <span>Remove</span>
+    </button>
+  )
 }
 
 export default function SessionSelection({ activeItem, sessions, programs, enableItemEdit, selectItem, removeSession, removeProgram, showModal }: Props) {
   return (
-    <Dropdown toggle={{ isIconTextBtn: true, iconId: "menu", title: activeItem.title }} body={{ className: "bottom-bar-dropdown" }}>
+    <Dropdown toggle={{ isIconTextBtn: true, iconId: "menu", title: activeItem.title }} body={{ className: "bottom-bar-dropdown" }} hasNested>
       <div className="dropdown-column">
         <div className="dropdown-group">
-          <button type="button" className="btn icon-text-btn dropdown-btn" onClick={() => showModal("session")}>
-            <Icon id="plus" />
-            <span>New session</span>
-          </button>
+          <div className="sessions-dropdown-header">
+            <span>Sessions</span>
+            <button type="button" className="btn icon-btn dropdown-btn" onClick={() => showModal("session")} title="Add Session">
+              <Icon id="plus" />
+            </button>
+          </div>
         </div>
         <div className="dropdown-group">
           {sessions.map(session => (
@@ -30,28 +47,26 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
                 onClick={() => selectItem(session.id, sessions, programs)}>
                 {session.title}
               </button>
-              <button type="button" className="btn icon-btn"
-                onClick={() => enableItemEdit(session.id, "session")} title="Edit" data-dropdown-btn>
-                <Icon id="edit" />
-              </button>
+              <Dropdown toggle={{ iconId: "vertical-dots" }}>
+                <button type="button" className="btn icon-text-btn dropdown-btn"
+                  onClick={() => enableItemEdit(session.id, "session")}>
+                  <Icon id="edit" />
+                  <span>Edit</span>
+                </button>
+                <SessionRemoveButton sessions={sessions} programs={programs} session={session} removeSession={removeSession} />
+              </Dropdown>
             </div>
           ))}
         </div>
-        {sessions.length > 1 ? (
-          <div className="dropdown-bottom">
-            <button type="button" className="btn icon-text-btn dropdown-btn" onClick={removeSession}>
-              <Icon id="trash" />
-              <span>Remove session</span>
-            </button>
-          </div>
-        ) : null}
       </div>
       <div className="dropdown-column">
         <div className="dropdown-group">
-          <button type="button" className="btn icon-text-btn dropdown-btn" onClick={() => showModal("program")}>
-            <Icon id="plus" />
-            <span>New program</span>
-          </button>
+          <div className="sessions-dropdown-header">
+            <span>Programs</span>
+            <button type="button" className="btn icon-btn dropdown-btn" onClick={() => showModal("program")} title="Add Program">
+              <Icon id="plus" />
+            </button>
+          </div>
         </div>
         <div className="dropdown-group">
           {programs.map(program => (
@@ -60,21 +75,22 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
                 onClick={() => selectItem(program.id, sessions, programs)}>
                 {program.title}
               </button>
-              <button type="button" className="btn icon-btn"
-                onClick={() => enableItemEdit(program.id, "program")} title="Edit" data-dropdown-btn>
-                <Icon id="edit" />
-              </button>
+              <Dropdown toggle={{ iconId: "vertical-dots" }}>
+                <button type="button" className="btn icon-text-btn dropdown-btn"
+                  onClick={() => enableItemEdit(program.id, "program")} title="Edit">
+                  <Icon id="edit" />
+                  <span>Edit</span>
+                </button>
+                {programs.length > 0 ? (
+                  <button type="button" className="btn icon-text-btn dropdown-btn" onClick={() => removeProgram(program.id)}>
+                    <Icon id="trash" />
+                    <span>Remove</span>
+                  </button>
+                ) : null}
+              </Dropdown>
             </div>
           ))}
         </div>
-        {programs.length > 0 && activeItem.type === "program" ? (
-          <div className="dropdown-bottom">
-            <button type="button" className="btn icon-text-btn dropdown-btn" onClick={removeProgram}>
-              <Icon id="trash" />
-              <span>Remove program</span>
-            </button>
-          </div>
-        ) : null}
       </div>
     </Dropdown>
   );

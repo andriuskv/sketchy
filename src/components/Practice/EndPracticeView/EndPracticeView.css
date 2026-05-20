@@ -37,15 +37,3 @@
   align-items: flex-start;
   gap: var(--space-sm);
 }
-
-.end-practice-image-list-header-info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-lg);
-}
-
-.end-practice-image-list-header-info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}

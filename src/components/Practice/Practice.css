@@ -9,19 +9,6 @@
   text-align: center;
 }
 
-.practice-starting-info {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-lg);
-}
-
-.practice-starting-info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
 .practice-bar-progress-container {
   z-index: 3;
   position: absolute;

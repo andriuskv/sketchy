@@ -4,6 +4,7 @@
   height: 100%;
   overflow: hidden;
   touch-action: none;
+  user-select: none;
 
   .icon-btn {
     --color: light-dark(var(--color-black-30), var(--color-white-60));
@@ -67,6 +68,7 @@
 .viewer-bottom-bar {
   bottom: var(--space-md);
   padding-left: var(--space-xl);
+  user-select: text;
 
   .svg-icon {
     pointer-events: none;

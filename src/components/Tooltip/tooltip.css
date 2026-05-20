@@ -1,0 +1,13 @@
+.tooltip {
+  z-index: 10000;
+  position: absolute;
+  position-area: top;
+  position-visibility: anchors-visible;
+  position-try-fallbacks: flip-inline flip-block;
+  margin-block: var(--space-sm);
+}
+
+.tooltip-text {
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}

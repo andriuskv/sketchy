@@ -337,6 +337,7 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
       window.addEventListener("pointercancel", handlePointerUp);
       root.current.style.cursor = "grabbing";
       root.current.style.userSelect = "none";
+      getSelection()?.empty();
     }
     else if (activePointers.current.size === 2) {
       const points = Array.from(activePointers.current.values());

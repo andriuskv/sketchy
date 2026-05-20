@@ -25,6 +25,7 @@
 
   --color-primary: hsl(var(--accent-hue) var(--accent-saturation) var(--accent-lightness));
   --color-primary-20: hsl(var(--accent-hue) calc(var(--accent-saturation) - 4 * 1%) calc(var(--accent-lightness) - 6 * 1%));
+  --color-primary-light-60: hsl(var(--accent-hue) 80% 84%);
 
   --color-white: hsl(var(--accent-hue) 100% 97%);
   --color-white-2: hsl(var(--accent-hue) 100% 97% / 2%);
@@ -36,6 +37,8 @@
   --color-white-80: hsl(var(--accent-hue) 100% 97% / 80%);
   --color-white-90: hsl(var(--accent-hue) 100% 97% / 90%);
   --color-white-90-100: hsl(var(--accent-hue) 20% 90%);
+
+  --color-white-10-100: hsl(var(--accent-hue) 16% 86%);
 
   --color-black-2: hsl(var(--accent-hue) 0% 3% / 2%);
   --color-black-4: hsl(var(--accent-hue) 0% 3% / 4%);

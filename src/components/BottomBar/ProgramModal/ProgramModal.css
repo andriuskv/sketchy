@@ -1,21 +1,5 @@
-.modal {
-  border: none;
-  box-shadow: var(--highligh-shadow);
-  corner-shape: squircle;
-  border-radius: 16px;
-  background-color: light-dark(var(--color-white-90-100), var(--color-grey-40));
-  color: inherit;
-}
-
 .program-modal {
-  max-height: 640px;
-  width: 320px;
-}
-
-.modal-title {
-  font-weight: bold;
-  font-size: var(--text-lg);
-  text-align: center;
+  max-height: min(640px, calc(100dvh - var(--space-xl)));
 }
 
 .program-modal-selected-sessions {
@@ -76,35 +60,6 @@
   font-size: var(--text-md);
 }
 
-.program-modal-break-duration-container {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-
-  .select-container.custom-duration {
-    position: relative;
-
-    .icon-btn {
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .select {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 26px;
-      height: 26px;
-      opacity: 0;
-    }
-  }
-
-
-  .input {
-    width: 80px;
-  }
-}
-
 .program-modal-available-sessions {
   max-height: 240px;
   overflow-y: auto;
@@ -126,28 +81,4 @@
 
 .program-modal-available-session-title {
   font-size: var(--text-lg);
-}
-
-.program-modal-available-session-info {
-  opacity: 0.8;
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.program-modal-available-session-info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  font-size: var(--text-sm);
-}
-
-.modal-bottom {
-  display: flex;
-  justify-content: end;
-  gap: var(--space-md);
-}
-
-.program-modal-break-duration-select {
-  appearance: base-select;
 }
