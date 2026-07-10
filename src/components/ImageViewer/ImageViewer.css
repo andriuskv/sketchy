@@ -75,6 +75,11 @@
   }
 }
 
+.viewer-bottom-bar-end-session {
+  padding-left: var(--space-sm);
+  color: var(--color-white-60);
+}
+
 .viewer-bar-item-info {
   margin-right: var(--space-md);
   font-size: var(--text-sm);
