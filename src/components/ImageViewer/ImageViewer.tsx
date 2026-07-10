@@ -414,6 +414,13 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
     zoomAtPos.current = { x, y };
   }
 
+  function copyName() {
+    const name = images[image.index].name;
+
+    window.navigator.clipboard.writeText(name);
+    setCopyMessage("Copied");
+  }
+
   return (
     <div className={`viewer${inSession ? "" : " overlay"}`} onPointerDown={handlePointerDown} onPointerMove={handleMousePosChange} onPointerLeave={handlePointerLeave}>
       {copyMessage ? <Toast message={copyMessage} position="top" offset="48px" duration={500} dismiss={dismissMessage} /> : null}
@@ -454,9 +461,15 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
         <img src={image.url} className="viewer-image" onLoad={handleImageLoad} draggable="false" ref={imageRef} key={image.index} />
       </div>
       {hideControls ? null : (
-        <div className="viewer-bar viewer-bottom-bar">
+        <div className={`viewer-bar viewer-bottom-bar${inSession ? "" : " viewer-bottom-bar-end-session"}`}>
           {image.mirrored ? <Icon id="flip-horizontal" /> : null}
-          {inSession ? null : <span className="viewer-bar-item-info text-overflow">{images[image.index].name}</span>}
+          {inSession ? null : (
+            <>
+              <button className="btn icon-btn" onClick={copyName} title="Copy name">
+                <Icon id="copy" />
+              </button>
+              <span className="viewer-bar-item-info text-overflow">{images[image.index].name}</span></>
+          )}
           <span className="viewer-bar-item-info">{image.index + 1} / {images.length}</span>
           {inSession && skip ? (
             <button className="btn text-btn" onClick={() => skip(true)}>Skip</button>
