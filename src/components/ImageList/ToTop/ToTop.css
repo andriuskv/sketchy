@@ -1,7 +1,7 @@
 .to-top-button {
-  --bottom: calc(var(--preferences-size) - 12px);
+  --bottom: calc(var(--padding-bottom) - 12px);
 
-  z-index: 1;
+  z-index: 2;
   position: absolute;
   right: 14px;
   bottom: var(--bottom, var(--space-md));

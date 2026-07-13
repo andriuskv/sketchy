@@ -15,7 +15,7 @@ type ListProps = {
   handleImageSelection: (event: React.ChangeEvent<HTMLInputElement>, name: string) => void,
   viewImage: (index: number, file: File, event: React.MouseEvent<HTMLButtonElement>) => void,
   sortImages?: (sortBy: string, sortOrder?: number) => void
-  resetImageCache?: () => void
+  resetCache?: () => void
 }
 
 type ItemProps = {
@@ -48,7 +48,7 @@ function Item({ image, index, container, handleImageSelection, viewImage }: Item
     return (
       <li className={`image-list-item${image.selected ? " selected" : ""}`} ref={ref}>
         <button className="btn image-list-view-btn" onClick={(event) => viewImage(index, image.file, event)}>
-          {image.count > 0 ? <div className="image-list-item-count">{image.count}</div> : null}
+          {image.seenCount > 0 ? <div className="image-list-item-count">{image.seenCount}</div> : null}
           <div className="image-list-item-name">{image.name}</div>
           <img src={thumb.url} className={`image-list-item-image${image.mirrored ? " mirrored" : ""}`} loading="lazy" draggable="false" alt="" />
         </button>
@@ -66,14 +66,14 @@ function Item({ image, index, container, handleImageSelection, viewImage }: Item
   return <li className="image-list-item" ref={ref}></li>;
 }
 
-export default function ImageList({ images, handleImageSelection, viewImage, sortOptions, sortImages, resetImageCache }: ListProps) {
+export default function ImageList({ images, handleImageSelection, viewImage, sortOptions, sortImages, resetCache }: ListProps) {
   const container = useRef<HTMLDivElement>(null);
   return (
-    <div className="image-list-view">
+    <div className="image-list-view" style={{ "--padding-bottom": sortOptions ? "98px" : "8px" } as React.CSSProperties}>
       {sortOptions && sortImages ? <div className="container image-list-header">
         <Sort sortOptions={sortOptions} sortImages={sortImages} />
         <Dropdown>
-          <button className="btn text-btn dropdown-btn" onClick={resetImageCache}>Reset cache</button>
+          <button className="btn text-btn dropdown-btn" onClick={resetCache}>Reset cache</button>
         </Dropdown>
       </div> : null}
       <div className="image-list-container" ref={container}>

@@ -104,10 +104,61 @@ function App() {
     }
   }
 
-  function buildSessionPractice(item: FormSession, images: Image[], imageCache: Record<string, number>): Practice | undefined {
+  function pickImages(images: Image[], count: number, cache: Record<string, { seenCount: number, weight: number }>) {
+    const shuffledImages = shuffleArray(images);
+
+    if (count >= shuffledImages.length) {
+      return shuffledImages;
+    }
+    else if (shuffledImages.length === 0) {
+      return [];
+    }
+    let weightSum = 1;
+
+    for (const { weight } of Object.values(cache)) {
+      weightSum += weight;
+    }
+    const pickedImages: Image[] = [];
+
+    for (let i = 0; i < count; i++) {
+      let rand = Math.random() * weightSum;
+
+      for (const image of shuffledImages.filter(image => !pickedImages.some(pickedImage => pickedImage.name === image.name))) {
+        const weight = cache[image.name]?.weight || 0.01;
+
+        if (weight < rand) {
+          pickedImages.push(image);
+          break;
+        }
+        else {
+          rand += weight;
+        }
+      }
+    }
+
+    if (pickedImages.length < count) {
+      const remaining = count - pickedImages.length;
+      const remainingImages = shuffledImages.filter(image => !pickedImages.some(pickedImage => pickedImage.name === image.name)).slice(0, remaining);
+      pickedImages.push(...remainingImages);
+    }
+    for (const image of pickedImages) {
+      if (cache[image.name]) {
+        cache[image.name].weight += 1 / (weightSum / cache[image.name].weight);
+      }
+      else {
+        cache[image.name] = { seenCount: 0, weight: 0.01 };
+      }
+    }
+
+    localStorage.setItem("cache", JSON.stringify(cache));
+
+    return pickedImages;
+  }
+
+  function buildSessionPractice(item: FormSession, images: Image[], cache: Record<string, { seenCount: number, weight: number }>): Practice | undefined {
     const seletedImages = images.filter(image => image.selected);
     let sessionImages = item.randomize ?
-      shuffleArray(seletedImages).slice(0, item.count) :
+      pickImages(seletedImages, item.count, cache) :
       seletedImages.slice(0, item.count);
 
     if (!sessionImages.length) {
@@ -116,7 +167,7 @@ function App() {
     sessionImages = sessionImages.map(image => ({
       ...image,
       mirrored: item.randomizeFlip ? Math.random() > 0.5 : false,
-      count: imageCache[image.name] ? imageCache[image.name] + 1 : 1
+      seenCount: cache[image.name].seenCount + 1
     }));
 
     return {
@@ -131,7 +182,7 @@ function App() {
     };
   }
 
-  function buildProgramPractice(program: Program, images: Image[], imageCache: Record<string, number>): Practice | undefined {
+  function buildProgramPractice(program: Program, images: Image[], cache: Record<string, { seenCount: number, weight: number }>): Practice | undefined {
     const seletedImages = images.filter(image => image.selected);
     const items = [];
 
@@ -143,7 +194,7 @@ function App() {
           throw new Error(`Session "${item.title}" not found`);
         }
         let sessionImages = session.randomize ?
-          shuffleArray(seletedImages).slice(0, session.count) :
+          pickImages(seletedImages, session.count, cache) :
           seletedImages.slice(0, session.count);
 
         if (!sessionImages.length) {
@@ -152,7 +203,7 @@ function App() {
         sessionImages = sessionImages.map(image => ({
           ...image,
           mirrored: session.randomizeFlip ? Math.random() > 0.5 : false,
-          count: imageCache[image.name] ? imageCache[image.name] + 1 : 1
+          seenCount: cache[image.name].seenCount + 1
         }));
 
         items.push({
@@ -178,23 +229,22 @@ function App() {
   }
 
   function startPractice(item: FormSession | Program, imageList: Image[] = images) {
-    const imageCache = JSON.parse(localStorage.getItem("imageCache")!) || {};
+    const cache = JSON.parse(localStorage.getItem("cache")!) || {};
     let practice: Practice | undefined;
 
     if (item.type === "session") {
-      practice = buildSessionPractice(item, imageList, imageCache);
+      practice = buildSessionPractice(item, imageList, cache);
 
       if (!practice) {
         return;
       }
     } else {
-      practice = buildProgramPractice(item, imageList, imageCache);
+      practice = buildProgramPractice(item, imageList, cache);
 
       if (!practice) {
         return;
       }
     }
-
     setPractice(practice);
 
     let newImages = imageList;
@@ -202,14 +252,14 @@ function App() {
     for (const item of practice.items) {
       if (item.type === "session") {
         for (const sessionImage of item.images) {
-          imageCache[sessionImage.name] = sessionImage.count;
+          cache[sessionImage.name] = { ...cache[sessionImage.name], seenCount: sessionImage.seenCount };
           const index = newImages.findIndex(image => image.name === sessionImage.name);
-          newImages = newImages.with(index, { ...newImages[index], count: sessionImage.count });
+          newImages = newImages.with(index, { ...newImages[index], seenCount: sessionImage.seenCount });
         }
       }
     }
     setImages(newImages);
-    localStorage.setItem("imageCache", JSON.stringify(imageCache));
+    localStorage.setItem("cache", JSON.stringify(cache));
   }
 
   function quitPractice() {
@@ -357,9 +407,9 @@ function App() {
     }
   }
 
-  function resetImageCache() {
-    localStorage.removeItem("imageCache");
-    setImages(images.map(image => ({ ...image, count: 0 })));
+  function resetCache() {
+    localStorage.removeItem("cache");
+    setImages(images.map(image => ({ ...image, seenCount: 0 })));
   }
 
   if (practice) {
@@ -375,7 +425,7 @@ function App() {
         </div>
       ) : null}
       {images.length ?
-        <ImageList images={images} handleImageSelection={(event, name) => handleImageSelection(event, name)} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} resetImageCache={resetImageCache} /> :
+        <ImageList images={images} handleImageSelection={(event, name) => handleImageSelection(event, name)} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} resetCache={resetCache} /> :
         <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
       }
       <BottomBar sessions={sessions} programs={programs} activeItem={activeItem} uploading={uploading} imageCount={images.length} selected={seletedImageCount} setSessions={setSessions} setPrograms={setPrograms} startPractice={startPractice} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
