@@ -83,14 +83,11 @@ async function readItems(items: DataTransferItemList, uploadedItems: Image[] = [
 }
 
 function assignCount(images: Image[]) {
-  const imageCache = JSON.parse(localStorage.getItem("imageCache")!) || {};
+  const cache = JSON.parse(localStorage.getItem("cache")!) || {};
 
   for (const image of images) {
-    const count = imageCache[image.name];
-
-    if (count) {
-      image.count = count;
-    }
+    const { seenCount } = cache[image.name] || {};
+    image.seenCount = seenCount || 0;
   }
   return images;
 }
@@ -100,11 +97,14 @@ function getUniqueImages(files: File[], images: Image[]) {
   let index = images.length;
 
   for (const file of files) {
+    if (!isSupportedMimeType(file.type)) {
+      continue;
+    }
     newImages.push({
       id: crypto.randomUUID(),
       index,
       file,
-      count: 0,
+      seenCount: 0,
       name: file.name,
       date: file.lastModified,
       size: file.size,
@@ -179,7 +179,7 @@ async function showOpenFilePicker(images: Image[]) {
       date: file.lastModified,
       size: file.size,
       selected: true,
-      count: 0
+      seenCount: 0
     });
     index += 1;
   }
@@ -203,7 +203,7 @@ async function showDirectoryPicker(images: Image[]) {
         date: file.lastModified,
         size: file.size,
         selected: true,
-        count: 0
+        seenCount: 0
       });
       index += 1;
     }
@@ -222,7 +222,7 @@ function getSortingValue(sortBy: string, file: Image) {
     return file.size;
   }
   else if (sortBy === "count") {
-    return file.count;
+    return file.seenCount;
   }
   else if (sortBy === "name") {
     // Remove special characters.

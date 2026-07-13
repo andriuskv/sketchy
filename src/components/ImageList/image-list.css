@@ -5,15 +5,12 @@
 }
 
 .image-list-container {
-  --bottom-padding: var(--preferences-size);
-
   position: relative;
   overflow-y: auto;
   transition: padding-bottom 0.2s;
   backface-visibility: hidden;
   will-change: scroll-position;
   flex-grow: 1;
-  padding-bottom: var(--bottom-padding);
 }
 
 .image-list {
@@ -21,7 +18,8 @@
   justify-content: center;
   grid-template-columns: repeat(auto-fill, 264px);
   gap: var(--space-md);
-  padding-block: var(--space-md);
+  padding-top: var(--space-md);
+  padding-bottom: var(--padding-bottom, var(--space-md));
 
   @media (width <=580px) {
     grid-template-columns: repeat(2, 1fr);
