@@ -107,10 +107,7 @@ function App() {
   function pickImages(images: Image[], count: number, cache: Record<string, { seenCount: number, weight: number }>) {
     const shuffledImages = shuffleArray(images);
 
-    if (count >= shuffledImages.length) {
-      return shuffledImages;
-    }
-    else if (shuffledImages.length === 0) {
+    if (shuffledImages.length === 0) {
       return [];
     }
     let weightSum = 1;
@@ -141,6 +138,7 @@ function App() {
       const remainingImages = shuffledImages.filter(image => !pickedImages.some(pickedImage => pickedImage.name === image.name)).slice(0, remaining);
       pickedImages.push(...remainingImages);
     }
+
     for (const image of pickedImages) {
       if (cache[image.name]) {
         cache[image.name].weight += 1 / (weightSum / cache[image.name].weight);
@@ -149,9 +147,6 @@ function App() {
         cache[image.name] = { seenCount: 0, weight: 0.01 };
       }
     }
-
-    localStorage.setItem("cache", JSON.stringify(cache));
-
     return pickedImages;
   }
 
@@ -361,50 +356,65 @@ function App() {
       return;
     }
     const id = crypto.randomUUID();
+    const cache = JSON.parse(localStorage.getItem("cache")!) || {};
+    const items = [];
 
     if (same) {
-      const items = [];
-
       for (const item of practice.items) {
         if (item.type === "session") {
           let images = item.images.filter(image => image.selected);
 
           if (item.randomize) {
-            images = shuffleArray(images);
+            images = pickImages(images, item.count, cache);
           }
-
-          if (item.randomizeFlip) {
-            images = images.map(image => ({ ...image, mirrored: Math.random() > 0.5 }));
-          }
+          images = images.map(image => ({
+            ...image,
+            mirrored: item.randomizeFlip ? Math.random() > 0.5 : false,
+            seenCount: cache[image.name].seenCount + 1
+          }));
           items.push({ ...item, images });
         }
         else {
           items.push(item);
         }
       }
-      setPractice({ ...practice, repeatId: id, repeating: true, items });
     }
     else {
-      const items = [];
+      const seletedImages = images.filter(image => image.selected);
 
       for (const item of practice.items) {
         if (item.type === "session") {
-          const seletedImages = images.filter(image => image.selected);
           let sessionImages = item.randomize ?
-            shuffleArray(seletedImages).slice(0, item.images.length) :
-            seletedImages.slice(0, item.images.length);
+            pickImages(seletedImages, item.count, cache) :
+            seletedImages.slice(0, item.count);
 
-          if (item.randomizeFlip) {
-            sessionImages = sessionImages.map(image => ({ ...image, mirrored: Math.random() > 0.5 }));
-          }
+          sessionImages = sessionImages.map(image => ({
+            ...image,
+            mirrored: item.randomizeFlip ? Math.random() > 0.5 : false,
+            seenCount: cache[image.name].seenCount + 1
+          }));
           items.push({ ...item, images: sessionImages });
         }
         else {
           items.push(item);
         }
       }
-      setPractice({ ...practice, repeatId: id, repeating: true, items });
     }
+    setPractice({ ...practice, repeatId: id, repeating: true, items });
+
+    let newImages = images;
+
+    for (const item of items) {
+      if (item.type === "session") {
+        for (const sessionImage of item.images) {
+          cache[sessionImage.name] = { ...cache[sessionImage.name], seenCount: sessionImage.seenCount };
+          const index = newImages.findIndex(image => image.name === sessionImage.name);
+          newImages = newImages.with(index, { ...newImages[index], seenCount: sessionImage.seenCount });
+        }
+      }
+    }
+    setImages(newImages);
+    localStorage.setItem("cache", JSON.stringify(cache));
   }
 
   function resetCache() {
