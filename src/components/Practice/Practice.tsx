@@ -148,10 +148,14 @@ export default function Practice({ practice, toggleAllImages, handleImageSelecti
     });
 
     if (nextItem.type === "session") {
+      const nextImage = nextItem.images[nextIndex];
+
       initWorker({ id: "grace", action: "start", duration: graceDuration, interval });
       pip.updateImage({
         index: nextIndex,
-        url: fileService.preloadImage(nextItem.images[nextIndex])
+        name: nextImage.name,
+        mirrored: nextImage.mirrored,
+        url: fileService.preloadImage(nextImage)
       }, nextItem.images.length);
       pip.updateGraceView(manual ? SKIP_DURATION : nextItem.grace, manual ? "Skipping" : "Loading", false);
       pip.toggleGraceView(true);
