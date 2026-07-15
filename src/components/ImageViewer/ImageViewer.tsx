@@ -35,10 +35,13 @@ function getMidpoint(p1: { x: number, y: number }, p2: { x: number, y: number })
 }
 
 function getImage(index: number, images: Image[]) {
+  const image = images[index];
+
   return {
     index,
-    mirrored: images[index].mirrored,
-    url: fileService.preloadImage(images[index])
+    name: image.name,
+    mirrored: image.mirrored,
+    url: fileService.preloadImage(image)
   };
 }
 
@@ -57,18 +60,34 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
     setImage(getImage(index, images));
   }, [index]);
 
+  useEffect(() => {
+    pip.updateActions({
+      skip: () => skip!(true),
+      pause: () => pause!(),
+      next: () => nextImage(),
+      prev: () => prevImage(),
+      rotate: () => rotateImage(),
+      mirror: () => mirrorImage(),
+      reset: () => resetImage()
+    });
+  }, [image]);
+
   function nextImage() {
     const nextIndex = image.index + 1;
     const index = nextIndex === images.length ? 0 : nextIndex;
+    const nextImage = getImage(index, images);
 
-    setImage(getImage(index, images));
+    setImage(nextImage);
+    pip.updateImage(nextImage, images.length);
   }
 
   function prevImage() {
     const nextIndex = image.index - 1;
     const index = nextIndex < 0 ? images.length - 1 : nextIndex;
+    const nextImage = getImage(index, images);
 
-    setImage(getImage(index, images));
+    setImage(nextImage);
+    pip.updateImage(nextImage, images.length);
   }
 
   function getZoomAtPos(target: HTMLElement, scaleAmount: number) {
@@ -116,15 +135,20 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
   function mirrorImage() {
     const target = imageRef.current!;
     const dir = parseInt(target.style.getPropertyValue("--dir"), 10);
+    const nextDir = dir === 1 ? -1 : 1;
 
-    target.style.setProperty("--dir", (dir === 1 ? -1 : 1).toString());
+    target.style.setProperty("--dir", (nextDir).toString());
+    pip.mirrorImage(nextDir);
   }
 
   function rotateImage() {
     const target = imageRef.current!;
     const rotation = parseInt(target.style.getPropertyValue("--rotation"), 10) || 0;
+    const nextRotation = rotation + 90 % 360;
 
-    target.style.setProperty("--rotation", (rotation + 90).toString());
+    target.style.setProperty("--rotation", (nextRotation).toString());
+
+    pip.rotateImage(nextRotation);
   }
 
   async function copyImage() {
@@ -228,6 +252,7 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
     target.style.setProperty("--scale", initialScale.current.toString());
     container.style.setProperty("--x", "50%");
     container.style.setProperty("--y", "50%");
+    pip.resetImage({ mirrored: image.mirrored });
   }
 
   function showInOriginalSize() {
@@ -382,15 +407,23 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
     }
   }
 
-  function togglePip() {
+  function togglePip(inSession?: boolean) {
     pip.toggle({
       data: {
-        image,
-        count: images.length
+        image: images[image.index],
+        index: image.index,
+        imageUrl: image.url,
+        count: images.length,
+        inSession
       },
       actions: {
         skip: () => skip!(true),
-        pause: () => pause!()
+        pause: () => pause!(),
+        next: () => nextImage(),
+        prev: () => prevImage(),
+        rotate: () => rotateImage(),
+        mirror: () => mirrorImage(),
+        reset: () => resetImage()
       }
     });
   }
@@ -426,8 +459,8 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
       {copyMessage ? <Toast message={copyMessage} position="top" offset="48px" duration={500} dismiss={dismissMessage} /> : null}
       {hideControls ? null : (
         <div className="viewer-bar viewer-top-bar">
-          {inSession && pip.isSupported() ? (
-            <button className="btn icon-btn" onClick={togglePip} title="Picture-in-picture">
+          {pip.isSupported() ? (
+            <button className="btn icon-btn" onClick={() => togglePip(inSession)} title="Picture-in-picture">
               <Icon id="pip" />
             </button>
           ) : null}
@@ -447,7 +480,7 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
             <Icon id="reset" />
           </button>
           {inSession ? (
-            <button className="btn icon-btn" onClick={pause} title="pause">
+            <button className="btn icon-btn" onClick={pause} title="Pause">
               <Icon id="pause" />
             </button>
           ) : (
@@ -462,7 +495,7 @@ export default function ImageViewer({ images, index, inSession, hideControls, pa
       </div>
       {hideControls ? null : (
         <div className={`viewer-bar viewer-bottom-bar${inSession ? "" : " viewer-bottom-bar-end-session"}`}>
-          {image.mirrored ? <Icon id="flip-horizontal" /> : null}
+          {image.mirrored ? <Icon id="flip-horizontal" title="Mirrored" /> : null}
           {inSession ? null : (
             <>
               <button className="btn icon-btn" onClick={copyName} title="Copy name">

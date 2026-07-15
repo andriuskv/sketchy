@@ -54,9 +54,11 @@ export default function EndPracticeView({ practice, toggleAllImages, handleImage
             <span>End practice</span>
           </button>
           <Dropdown>
+            <div className="dropdown-group">
+              <button className="btn dropdown-btn text-btn" onClick={() => repeatPractice(false)}>Repeat practice (new)</button>
+              <button className="btn dropdown-btn text-btn" onClick={() => repeatPractice(true)}>Repeat practice (same)</button>
+            </div>
             <button className="btn dropdown-btn text-btn" onClick={toggleSelected}>{selected ? "Deselect" : "Select"} all images</button>
-            <button className="btn dropdown-btn text-btn" onClick={() => repeatPractice(false)}>Repeat practice (new)</button>
-            <button className="btn dropdown-btn text-btn" onClick={() => repeatPractice(true)}>Repeat practice (same)</button>
           </Dropdown>
         </div>
         {practice.items.length > 1 ? (
