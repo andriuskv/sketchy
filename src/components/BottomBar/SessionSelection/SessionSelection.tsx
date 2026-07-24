@@ -40,9 +40,9 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
             </button>
           </div>
         </div>
-        <div className="dropdown-group">
+        <ul className="dropdown-group sessions-dropdown-column">
           {sessions.map(session => (
-            <div className="dropdown-btn-container" key={session.id}>
+            <li className="dropdown-btn-container" key={session.id}>
               <button type="button" className={`btn text-btn dropdown-btn${activeItem.id === session.id ? " active" : ""}`}
                 onClick={() => selectItem(session.id, sessions, programs)}>
                 {session.title}
@@ -55,9 +55,9 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
                 </button>
                 <SessionRemoveButton sessions={sessions} programs={programs} session={session} removeSession={removeSession} />
               </Dropdown>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
       <div className="dropdown-column">
         <div className="dropdown-group">
@@ -68,9 +68,9 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
             </button>
           </div>
         </div>
-        <div className="dropdown-group">
+        <ul className="dropdown-group sessions-dropdown-column">
           {programs.map(program => (
-            <div className="dropdown-btn-container" key={program.id}>
+            <li className="dropdown-btn-container" key={program.id}>
               <button type="button" className={`btn text-btn dropdown-btn${activeItem.id === program.id ? " active" : ""}`}
                 onClick={() => selectItem(program.id, sessions, programs)}>
                 {program.title}
@@ -88,9 +88,9 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
                   </button>
                 ) : null}
               </Dropdown>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </Dropdown>
   );
