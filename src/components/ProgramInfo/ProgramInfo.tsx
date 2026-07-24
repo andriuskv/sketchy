@@ -11,7 +11,7 @@ function SessionItemWrapper({ id, getSessionById }: { id: string, getSessionById
     <div className="program-info-item-wrapper" style={{ "anchorName": `--anchor-${id}` } as CSSProperties} data-tooltip={id} >
       <div className="program-info-item" >{session.title}</div>
       <div className="program-info-item-tooltip-wrapper" data-tooltip-content={id}>
-        <SessionInfo item={session} timeInMs={false} className="program-info-item-tooltip" />
+        <SessionInfo item={session} timeInMs={false} className="program-info-item-tooltip" key={id} />
       </div>
     </div>
   );

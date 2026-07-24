@@ -29,12 +29,19 @@ export default function Tooltip() {
       if (!tooltipElement || tooltipElement.hasAttribute("data-tooltip-id") || activeTooltips.current.has(tooltipElement)) {
         return;
       }
+      const id = tooltipElement.getAttribute("data-tooltip");
+      const contentElement = document.querySelector(`[data-tooltip-content="${id}"]`) as HTMLElement;
+
+      if (!contentElement) {
+        return;
+      }
+
       activeTooltips.current.add(tooltipElement);
       tooltipElement.addEventListener("pointerleave", resetTooltipElement, { once: true });
       timeoutId.current = timeout(() => {
         const tooltip: Tooltip = {
           id: getRandomString(),
-          content: document.querySelector("[data-tooltip-content]")?.cloneNode(true) as HTMLElement,
+          content: contentElement.cloneNode(true) as HTMLElement,
           type: "hover"
         };
 

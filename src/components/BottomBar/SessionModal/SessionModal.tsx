@@ -26,17 +26,22 @@ export default function SessionModal({ modal, addSession, editSession, close, re
       return;
     }
 
+    const newState = {
+      ...state,
+      title: state.title.trim()
+    };
+
     if (modal.session) {
-      editSession(state);
+      editSession(newState);
     } else {
-      addSession(state);
+      addSession(newState);
     }
     close();
   }
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
     const target = event.target;
-    const value = target.type === "checkbox" ? target.checked : target.value.trim();
+    const value = target.type === "checkbox" ? target.checked : target.value;
 
     setState({
       ...state,
