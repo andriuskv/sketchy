@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type DragEvent } from "react";
 import { shuffleArray } from "@/utils";
 import * as filesService from "services/files";
+import * as dbService from "services/db";
 import Practice from "components/Practice/Practice";
 import ImageList from "components/ImageList/ImageList";
 import BottomBar from "components/BottomBar/BottomBar";
@@ -86,6 +87,20 @@ function App() {
     } finally {
       setUploading(false);
     }
+  }
+
+  async function loadImagesFromHandle(handle: FileSystemDirectoryEntry) {
+    const newImages = await filesService.getItemsFromDirHandle(handle, images);
+    const updatedImages = images.concat(newImages);
+
+    setImages(updatedImages);
+
+    const startImmediately = localStorage.getItem("startImmediately");
+
+    if (startImmediately) {
+      startPractice(activeItem, updatedImages);
+    }
+    dbService.updateAccessed(handle);
   }
 
   function handleFileChange({ target }: ChangeEvent<HTMLInputElement>) {
@@ -436,7 +451,7 @@ function App() {
       ) : null}
       {images.length ?
         <ImageList images={images} handleImageSelection={(event, name) => handleImageSelection(event, name)} sortOptions={sortOptions} sortImages={sortImages} viewImage={viewImage} resetCache={resetCache} /> :
-        <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
+        <Splash uploading={uploading} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} loadImagesFromHandle={loadImagesFromHandle} />
       }
       <BottomBar sessions={sessions} programs={programs} activeItem={activeItem} uploading={uploading} imageCount={images.length} selected={seletedImageCount} setSessions={setSessions} setPrograms={setPrograms} startPractice={startPractice} resetSelected={resetSelected} clearList={clearList} showFilePicker={showFilePicker} showDirPicker={showDirPicker} handleFileChange={handleFileChange} />
       <Tooltip />

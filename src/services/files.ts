@@ -1,4 +1,5 @@
 import { delay } from "@/utils";
+import * as dbService from "@/services/db";
 
 let thumbs: {
   [name: string]: {
@@ -188,9 +189,17 @@ async function showOpenFilePicker(images: Image[]) {
 
 async function showDirectoryPicker(images: Image[]) {
   const handle = await (window as any).showDirectoryPicker();
-  const files: Image[] = [];
-  // Would be better to find largest index
-  let index = images.length;
+
+  dbService.addItem({
+    handle,
+    date: Date.now()
+  });
+
+  return getItemsFromDirHandle(handle, images);
+}
+
+async function getItemsFromDirHandle(handle: FileSystemDirectoryEntry, images: Image[], files: Image[] = []) {
+  let index = images.length + files.length;
 
   for await (const value of handle.values()) {
     if (value.kind === "file") {
@@ -206,6 +215,9 @@ async function showDirectoryPicker(images: Image[]) {
         seenCount: 0
       });
       index += 1;
+    }
+    else if (value.kind === "directory") {
+      files = await getItemsFromDirHandle(value as FileSystemDirectoryEntry, images, files);
     }
   }
   return removeDuplicates(assignCount(files), images);
@@ -353,6 +365,7 @@ window.addEventListener("dragover", event => {
 });
 
 export {
+  getItemsFromDirHandle,
   preloadImage,
   cleanupPreloadedImages,
   setImageDimensions,
