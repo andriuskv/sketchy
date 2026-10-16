@@ -8,7 +8,6 @@
     "target": "ESNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "importsNotUsedAsValues": "remove",
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "allowJs": true,
