@@ -47,7 +47,7 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
                 onClick={() => selectItem(session.id, sessions, programs)}>
                 {session.title}
               </button>
-              <Dropdown toggle={{ iconId: "vertical-dots" }}>
+              <Dropdown toggle={{ iconId: "vertical-dots" }} usePortal>
                 <button type="button" className="btn icon-text-btn dropdown-btn"
                   onClick={() => enableItemEdit(session.id, "session")}>
                   <Icon id="edit" />
@@ -75,7 +75,7 @@ export default function SessionSelection({ activeItem, sessions, programs, enabl
                 onClick={() => selectItem(program.id, sessions, programs)}>
                 {program.title}
               </button>
-              <Dropdown toggle={{ iconId: "vertical-dots" }}>
+              <Dropdown toggle={{ iconId: "vertical-dots" }} usePortal>
                 <button type="button" className="btn icon-text-btn dropdown-btn"
                   onClick={() => enableItemEdit(program.id, "program")} title="Edit">
                   <Icon id="edit" />

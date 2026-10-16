@@ -52,6 +52,7 @@
 }
 
 .sessions-dropdown-column {
-  max-height: 166px;
   overflow-y: auto;
+  max-height: 166px;
+  height: 100%;
 }
